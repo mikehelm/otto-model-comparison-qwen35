@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Model Comparison - Qwen3.5-Plus vs Codex CLI vs Claude Opus 4.6</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --qwen-primary: #ffb800;
+            --qwen-secondary: #ff9500;
+            --codex-primary: #00d4aa;
+            --codex-secondary: #00a885;
+            --opus-primary: #a855f7;
+            --opus-secondary: #7c3aed;
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-card-hover: #1a1a25;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --border-color: #2a2a3a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --purple-glow: #a855f7;
+            --green-good: #22c55e;
+            --amber-mid: #f59e0b;
+            --red-low: #ef4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            padding: 3rem 0;
+            background: linear-gradient(135deg, rgba(255,184,0,0.1) 0%, rgba(168,85,247,0.1) 100%);
+            border-radius: 20px;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--qwen-primary), var(--opus-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        section {
+            margin-bottom: 4rem;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        h2::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--qwen-primary), var(--opus-primary));
+            margin: 0.5rem auto 0;
+            border-radius: 2px;
+        }
+
+        /* Model Cards */
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .model-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .model-card:hover {
+            transform: translateY(-5px);
+            background: var(--bg-card-hover);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .model-card.qwen { border-top: 3px solid var(--qwen-primary); }
+        .model-card.codex { border-top: 3px solid var(--codex-primary); }
+        .model-card.opus { border-top: 3px solid var(--opus-primary); }
+
+        .model-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .model-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .model-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .ratings-container {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 1.5rem;
+        }
+
+        .rating-circle {
+            text-align: center;
+        }
+
+        .circle {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+
+        .circle::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            padding: 3px;
+            background: linear-gradient(135deg, currentColor, transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
+
+        .circle.qwen { background: rgba(255,184,0,0.15); color: var(--qwen-primary); }
+        .circle.codex { background: rgba(0,212,170,0.15); color: var(--codex-primary); }
+        .circle.opus { background: rgba(168,85,247,0.15); color: var(--opus-primary); }
+
+        .rating-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .overall-score {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        .overall-score .score {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .overall-score .label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .sub-categories {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+        }
+
+        .sub-cat {
+            text-align: center;
+            padding: 0.5rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+        }
+
+        .sub-cat-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin: 0 auto 0.25rem;
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        .dot-purple { background: var(--purple-glow); color: var(--purple-glow); }
+        .dot-green { background: var(--green-good); color: var(--green-good); }
+        .dot-amber { background: var(--amber-mid); color: var(--amber-mid); }
+        .dot-red { background: var(--red-low); color: var(--red-low); }
+
+        .sub-cat-name {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            line-height: 1.2;
+        }
+
+        /* Cost Cards */
+        .cost-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .cost-card {
+            background: var(--bg-card);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .cost-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .cost-item:last-child {
+            border-bottom: none;
+        }
+
+        .cost-label {
+            color: var(--text-secondary);
+        }
+
+        .cost-value {
+            font-weight: 600;
+        }
+
+        .cost-note {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .cost-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+            background: var(--bg-card);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .cost-table th,
+        .cost-table td {
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .cost-table th {
+            background: rgba(255,255,255,0.05);
+            font-weight: 600;
+        }
+
+        .cost-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .cost-table tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        /* Comparison Table */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .comparison-table th {
+            background: rgba(255,255,255,0.05);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+
+        .comparison-table td:first-child {
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .comparison-table tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .winner {
+            background: rgba(34,197,94,0.15) !important;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .winner::before {
+            content: '👑 ';
+        }
+
+        /* Bar Charts */
+        .benchmark-container {
+            background: var(--bg-card);
+            border-radius: 15px;
+            padding: 2rem;
+        }
+
+        .benchmark-item {
+            margin-bottom: 2rem;
+        }
+
+        .benchmark-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .benchmark-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .bar-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .bar-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .bar-name {
+            width: 60px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .bar-track {
+            flex: 1;
+            height: 24px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            padding-left: 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: width 0.5s ease;
+        }
+
+        .bar-fill.qwen { background: linear-gradient(90deg, var(--qwen-secondary), var(--qwen-primary)); }
+        .bar-fill.codex { background: linear-gradient(90deg, var(--codex-secondary), var(--codex-primary)); }
+        .bar-fill.opus { background: linear-gradient(90deg, var(--opus-secondary), var(--opus-primary)); }
+
+        /* Win Cards */
+        .win-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .win-card {
+            background: var(--bg-card);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .win-card.wins { border-left: 3px solid var(--success); }
+        .win-card.not { border-left: 3px solid var(--danger); }
+
+        .win-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .win-list {
+            list-style: none;
+        }
+
+        .win-list li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            color: var(--text-secondary);
+        }
+
+        .win-card.wins .win-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .win-card.not .win-list li::before {
+            content: '✗';
+            position: absolute;
+            left: 0;
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        /* Security Review Table */
+        .security-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .security-table th,
+        .security-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .security-table th {
+            background: rgba(255,255,255,0.05);
+            font-weight: 600;
+        }
+
+        .security-table .check { color: var(--success); }
+        .security-table .miss { color: var(--danger); }
+        .security-table .partial { color: var(--warning); }
+
+        .security-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .security-stat {
+            background: rgba(255,255,255,0.05);
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .security-stat .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .security-stat .label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        /* Pipeline Flow */
+        .pipeline-flow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            padding: 2rem;
+            background: var(--bg-card);
+            border-radius: 15px;
+        }
+
+        .pipeline-step {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            padding: 1.5rem 2rem;
+            border-radius: 15px;
+            text-align: center;
+            min-width: 150px;
+            border: 1px solid var(--border-color);
+        }
+
+        .pipeline-step .icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .pipeline-step .name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .pipeline-step .action {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .pipeline-arrow {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .pipeline-step.qwen { border-color: var(--qwen-primary); }
+        .pipeline-step.codex { border-color: var(--codex-primary); }
+        .pipeline-step.opus { border-color: var(--opus-primary); }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem 0;
+            margin-top: 4rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        footer a {
+            color: var(--qwen-primary);
+            text-decoration: none;
+            margin: 0 0.5rem;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-links {
+            margin-top: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            h2 {
+                font-size: 1.4rem;
+            }
+
+            .model-grid,
+            .cost-grid,
+            .win-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sub-categories {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .comparison-table,
+            .cost-table,
+            .security-table {
+                font-size: 0.85rem;
+            }
+
+            .comparison-table th,
+            .comparison-table td,
+            .cost-table th,
+            .cost-table td,
+            .security-table th,
+            .security-table td {
+                padding: 0.75rem 0.5rem;
+            }
+
+            .pipeline-flow {
+                flex-direction: column;
+            }
+
+            .pipeline-arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI Model Comparison</h1>
+            <p class="subtitle">Qwen3.5-Plus vs Codex CLI (GPT-5.3) vs Claude Opus 4.6</p>
+        </header>
+
+        <!-- SECTION 1: The Three Models -->
+        <section>
+            <h2>The Three Models</h2>
+            <div class="model-grid">
+                <!-- Qwen Card -->
+                <div class="model-card qwen">
+                    <div class="model-icon">🔥</div>
+                    <div class="model-name">Qwen3.5-Plus</div>
+                    <div class="model-subtitle">Alibaba Cloud · 397B MoE</div>
+                    
+                    <div class="ratings-container">
+                        <div class="rating-circle">
+                            <div class="circle qwen">10</div>
+                            <div class="rating-label">💰 Price</div>
+                        </div>
+                        <div class="rating-circle">
+                            <div class="circle qwen">9.5</div>
+                            <div class="rating-label">⚡ Speed</div>
+                        </div>
+                        <div class="rating-circle">
+                            <div class="circle qwen">8.5</div>
+                            <div class="rating-label">🧠 Intel</div>
+                        </div>
+                    </div>
+
+                    <div class="overall-score">
+                        <div class="score" style="color: var(--qwen-primary)">9.3</div>
+                        <div class="label">Overall Score</div>
+                    </div>
+
+                    <div class="sub-categories">
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-purple"></div>
+                            <div class="sub-cat-name">Knowledge<br>9</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-purple"></div>
+                            <div class="sub-cat-name">Reasoning<br>9</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-green"></div>
+                            <div class="sub-cat-name">Coding<br>8</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-purple"></div>
+                            <div class="sub-cat-name">Instruction<br>10</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-purple"></div>
+                            <div class="sub-cat-name">Security<br>9</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-green"></div>
+                            <div class="sub-cat-name">Arch<br>7</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-green"></div>
+                            <div class="sub-cat-name">Creative<br>7</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-purple"></div>
+                            <div class="sub-cat-name">Multimodal<br>9</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Codex Card -->
+                <div class="model-card codex">
+                    <div class="model-icon">💻</div>
+                    <div class="model-name">Codex CLI</div>
+                    <div class="model-subtitle">OpenAI · GPT-5.3 · Sandboxed</div>
+                    
+                    <div class="ratings-container">
+                        <div class="rating-circle">
+                            <div class="circle codex">5</div>
+                            <div class="rating-label">💰 Price</div>
+                        </div>
+                        <div class="rating-circle">
+                            <div class="circle codex">4</div>
+                            <div class="rating-label">⚡ Speed</div>
+                        </div>
+                        <div class="rating-circle">
+                            <div class="circle codex">8.0</div>
+                            <div class="rating-label">🧠 Intel</div>
+                        </div>
+                    </div>
+
+                    <div class="overall-score">
+                        <div class="score" style="color: var(--codex-primary)">5.7</div>
+                        <div class="label">Overall Score</div>
+                    </div>
+
+                    <div class="sub-categories">
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-green"></div>
+                            <div class="sub-cat-name">Knowledge<br>8</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-green"></div>
+                            <div class="sub-cat-name">Reasoning<br>7</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-purple"></div>
+                            <div class="sub-cat-name">Coding<br>10</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-green"></div>
+                            <div class="sub-cat-name">Instruction<br>7</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-red"></div>
+                            <div class="sub-cat-name">Security<br>4</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-red"></div>
+                            <div class="sub-cat-name">Arch<br>4</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-red"></div>
+                            <div class="sub-cat-name">Creative<br>5</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-red"></div>
+                            <div class="sub-cat-name">Multimodal<br>3</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Opus Card -->
+                <div class="model-card opus">
+                    <div class="model-icon">🧠</div>
+                    <div class="model-name">Claude Opus 4.6</div>
+                    <div class="model-subtitle">Anthropic · Frontier Reasoning</div>
+                    
+                    <div class="ratings-container">
+                        <div class="rating-circle">
+                            <div class="circle opus">2</div>
+                            <div class="rating-label">💰 Price</div>
+                        </div>
+                        <div class="rating-circle">
+                            <div class="circle opus">6</div>
+                            <div class="rating-label">⚡ Speed</div>
+                        </div>
+                        <div class="rating-circle">
+                            <div class="circle opus">9.5</div>
+                            <div class="rating-label">🧠 Intel</div>
+                        </div>
+                    </div>
+
+                    <div class="overall-score">
+                        <div class="score" style="color: var(--opus-primary)">5.8</div>
+                        <div class="label">Overall Score</div>
+                    </div>
+
+                    <div class="sub-categories">
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-green"></div>
+                            <div class="sub-cat-name">Knowledge<br>8</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-purple"></div>
+                            <div class="sub-cat-name">Reasoning<br>9</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-green"></div>
+                            <div class="sub-cat-name">Coding<br>8</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-purple"></div>
+                            <div class="sub-cat-name">Instruction<br>9</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-purple"></div>
+                            <div class="sub-cat-name">Security<br>9</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-purple"></div>
+                            <div class="sub-cat-name">Arch<br>10</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-purple"></div>
+                            <div class="sub-cat-name">Creative<br>10</div>
+                        </div>
+                        <div class="sub-cat">
+                            <div class="sub-cat-dot dot-purple"></div>
+                            <div class="sub-cat-name">Multimodal<br>9</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: API Cost Comparison -->
+        <section>
+            <h2>API Cost Comparison</h2>
+            <div class="cost-grid">
+                <div class="cost-card">
+                    <h3 style="color: var(--qwen-primary)">🔥 Qwen3.5-Plus</h3>
+                    <div class="cost-item">
+                        <span class="cost-label">Input (per 1M tokens)</span>
+                        <span class="cost-value">$0.80</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-label">Output (per 1M tokens)</span>
+                        <span class="cost-value">$2.00</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-label">Context Window</span>
+                        <span class="cost-value">1M tokens</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-label">Per Typical Review</span>
+                        <span class="cost-value">$0.02</span>
+                    </div>
+                </div>
+
+                <div class="cost-card">
+                    <h3 style="color: var(--codex-primary)">💻 Codex CLI</h3>
+                    <div class="cost-item">
+                        <span class="cost-label">Input (per 1M tokens)</span>
+                        <span class="cost-value">$2.50</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-label">Output (per 1M tokens)</span>
+                        <span class="cost-value">$10.00</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-label">Context Window</span>
+                        <span class="cost-value">200K tokens</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-label">Per Typical Session</span>
+                        <span class="cost-value">$0.05</span>
+                    </div>
+                </div>
+
+                <div class="cost-card">
+                    <h3 style="color: var(--opus-primary)">🧠 Claude Opus 4.6</h3>
+                    <div class="cost-item">
+                        <span class="cost-label">Input (per 1M tokens)</span>
+                        <span class="cost-value">$15.00</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-label">Output (per 1M tokens)</span>
+                        <span class="cost-value">$75.00</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-label">Context Window</span>
+                        <span class="cost-value">200K tokens</span>
+                    </div>
+                    <div class="cost-item">
+                        <span class="cost-label">Per Typical Review</span>
+                        <span class="cost-value">$0.30</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cost-note">
+                💡 Subscriptions available: ChatGPT Pro ($200/mo) and Claude Max ($200/mo) for unlimited usage tiers.
+            </div>
+
+            <table class="cost-table">
+                <thead>
+                    <tr>
+                        <th>Usage Level</th>
+                        <th>Calls/Month</th>
+                        <th>Qwen Cost</th>
+                        <th>Codex Cost</th>
+                        <th>Opus Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Light</td>
+                        <td>50</td>
+                        <td>$1.00</td>
+                        <td>$2.50</td>
+                        <td>$15.00</td>
+                    </tr>
+                    <tr>
+                        <td>Medium</td>
+                        <td>500</td>
+                        <td>$10.00</td>
+                        <td>$25.00</td>
+                        <td>$150.00</td>
+                    </tr>
+                    <tr>
+                        <td>Heavy</td>
+                        <td>2,000</td>
+                        <td>$40.00</td>
+                        <td>$100.00</td>
+                        <td>$600.00</td>
+                    </tr>
+                    <tr>
+                        <td>Pipeline</td>
+                        <td>5,000</td>
+                        <td>$100.00</td>
+                        <td>$250.00</td>
+                        <td>$1,500.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- SECTION 3: Head-to-Head -->
+        <section>
+            <h2>Head-to-Head Comparison</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Qwen3.5-Plus</th>
+                        <th>Codex CLI</th>
+                        <th>Claude Opus 4.6</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Cost Input</td>
+                        <td class="winner">$0.80 / 1M</td>
+                        <td>$2.50 / 1M</td>
+                        <td>$15.00 / 1M</td>
+                    </tr>
+                    <tr>
+                        <td>Cost Output</td>
+                        <td class="winner">$2.00 / 1M</td>
+                        <td>$10.00 / 1M</td>
+                        <td>$75.00 / 1M</td>
+                    </tr>
+                    <tr>
+                        <td>Response Speed</td>
+                        <td class="winner">~2-5 seconds</td>
+                        <td>Slow (sandboxed)</td>
+                        <td>~5-15 seconds</td>
+                    </tr>
+                    <tr>
+                        <td>Context Window</td>
+                        <td class="winner">1M tokens</td>
+                        <td>200K tokens</td>
+                        <td>200K tokens</td>
+                    </tr>
+                    <tr>
+                        <td>MMLU-Pro</td>
+                        <td class="winner">87.8</td>
+                        <td>~86</td>
+                        <td>~85</td>
+                    </tr>
+                    <tr>
+                        <td>GPQA Diamond</td>
+                        <td class="winner">88.4</td>
+                        <td>~83</td>
+                        <td>86.8</td>
+                    </tr>
+                    <tr>
+                        <td>IFBench</td>
+                        <td>76.5</td>
+                        <td>Good</td>
+                        <td class="winner">Very Good</td>
+                    </tr>
+                    <tr>
+                        <td>SWE-Bench</td>
+                        <td>Good</td>
+                        <td class="winner">Best</td>
+                        <td>Very Good</td>
+                    </tr>
+                    <tr>
+                        <td>Code Execution</td>
+                        <td>No</td>
+                        <td class="winner">Yes (sandbox)</td>
+                        <td>No</td>
+                    </tr>
+                    <tr>
+                        <td>Vision</td>
+                        <td class="winner">Yes</td>
+                        <td>No</td>
+                        <td class="winner">Yes</td>
+                    </tr>
+                    <tr>
+                        <td>Architecture Planning</td>
+                        <td>Very Good</td>
+                        <td>Not designed</td>
+                        <td class="winner">Exceptional</td>
+                    </tr>
+                    <tr>
+                        <td>Security Reviews</td>
+                        <td class="winner">Harshest</td>
+                        <td>Not designed</td>
+                        <td>Excellent</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- SECTION 4: Benchmark Comparison -->
+        <section>
+            <h2>Benchmark Comparison</h2>
+            <div class="benchmark-container">
+                <div class="benchmark-item">
+                    <div class="benchmark-label">
+                        <span>MMLU-Pro</span>
+                        <span>Higher is better</span>
+                    </div>
+                    <div class="bar-container">
+                        <div class="bar-row">
+                            <span class="bar-name">Qwen</span>
+                            <div class="bar-track">
+                                <div class="bar-fill qwen" style="width: 87.8%">87.8</div>
+                            </div>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-name">Codex</span>
+                            <div class="bar-track">
+                                <div class="bar-fill codex" style="width: 86%">~86</div>
+                            </div>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-name">Opus</span>
+                            <div class="bar-track">
+                                <div class="bar-fill opus" style="width: 85%">~85</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="benchmark-item">
+                    <div class="benchmark-label">
+                        <span>GPQA Diamond</span>
+                        <span>Higher is better</span>
+                    </div>
+                    <div class="bar-container">
+                        <div class="bar-row">
+                            <span class="bar-name">Qwen</span>
+                            <div class="bar-track">
+                                <div class="bar-fill qwen" style="width: 88.4%">88.4</div>
+                            </div>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-name">Codex</span>
+                            <div class="bar-track">
+                                <div class="bar-fill codex" style="width: 83%">~83</div>
+                            </div>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-name">Opus</span>
+                            <div class="bar-track">
+                                <div class="bar-fill opus" style="width: 86.8%">86.8</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="benchmark-item">
+                    <div class="benchmark-label">
+                        <span>IFBench</span>
+                        <span>Higher is better</span>
+                    </div>
+                    <div class="bar-container">
+                        <div class="bar-row">
+                            <span class="bar-name">Qwen</span>
+                            <div class="bar-track">
+                                <div class="bar-fill qwen" style="width: 76.5%">76.5</div>
+                            </div>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-name">Codex</span>
+                            <div class="bar-track">
+                                <div class="bar-fill codex" style="width: 70%">Good</div>
+                            </div>
+                        </div>
+                        <div class="bar-row">
+                            <span class="bar-name">Opus</span>
+                            <div class="bar-track">
+                                <div class="bar-fill opus" style="width: 80%">Very Good</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: Where Each Model Wins -->
+        <section>
+            <h2>Where Each Model Wins</h2>
+            <div class="win-grid">
+                <div class="win-card wins">
+                    <h3 style="color: var(--qwen-primary)">🔥 Qwen Wins At</h3>
+                    <ul class="win-list">
+                        <li>Security reviews (harshest critic)</li>
+                        <li>Speed (~2-5s responses)</li>
+                        <li>Cost (cheapest by far)</li>
+                        <li>Context window (1M tokens)</li>
+                        <li>Benchmarks (MMLU-Pro, GPQA)</li>
+                        <li>Instruction following</li>
+                        <li>Multimodal tasks</li>
+                    </ul>
+                </div>
+
+                <div class="win-card not">
+                    <h3 style="color: var(--danger)">🔥 Qwen Doesn't Do</h3>
+                    <ul class="win-list">
+                        <li>Code execution</li>
+                        <li>Agentic loops</li>
+                        <li>Deep creative reasoning</li>
+                        <li>Long-horizon planning</li>
+                        <li>Safety alignment</li>
+                    </ul>
+                </div>
+
+                <div class="win-card wins">
+                    <h3 style="color: var(--codex-primary)">💻 Codex Wins At</h3>
+                    <ul class="win-list">
+                        <li>Writing code (SWE-Bench best)</li>
+                        <li>Sandboxed execution</li>
+                        <li>Bug fixing</li>
+                        <li>File operations</li>
+                        <li>TDD workflows</li>
+                    </ul>
+                </div>
+
+                <div class="win-card wins">
+                    <h3 style="color: var(--opus-primary)">🧠 Opus Wins At</h3>
+                    <ul class="win-list">
+                        <li>Architecture planning</li>
+                        <li>Multi-step reasoning</li>
+                        <li>Nuanced analysis</li>
+                        <li>Creative problem-solving</li>
+                        <li>Safety & alignment</li>
+                        <li>Strategic thinking</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 6: Real-World Test -->
+        <section>
+            <h2>Real-World Test: Builder Agent Security Review</h2>
+            <table class="security-table">
+                <thead>
+                    <tr>
+                        <th>Security Issue</th>
+                        <th>GPT-4o Auto</th>
+                        <th>GPT-4o Pro</th>
+                        <th>Qwen3.5-Plus</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Trusted host is dangerous</td>
+                        <td><span class="miss">✗ Missed</span></td>
+                        <td><span class="check">✓ Found</span></td>
+                        <td><span class="check">✓ Found</span></td>
+                    </tr>
+                    <tr>
+                        <td>File handoff injection</td>
+                        <td><span class="miss">✗ Missed</span></td>
+                        <td><span class="check">✓ Found</span></td>
+                        <td><span class="check">✓ Found</span></td>
+                    </tr>
+                    <tr>
+                        <td>Agent self-modification risk</td>
+                        <td><span class="miss">✗ Missed</span></td>
+                        <td><span class="miss">✗ Missed</span></td>
+                        <td><span class="check">✓ Only Qwen</span></td>
+                    </tr>
+                    <tr>
+                        <td>sessions_send as exfil channel</td>
+                        <td><span class="miss">✗ Missed</span></td>
+                        <td><span class="miss">✗ Missed</span></td>
+                        <td><span class="check">✓ Only Qwen</span></td>
+                    </tr>
+                    <tr>
+                        <td>Formal job state machine</td>
+                        <td><span class="miss">✗ Missed</span></td>
+                        <td><span class="miss">✗ Missed</span></td>
+                        <td><span class="check">✓ Only Qwen</span></td>
+                    </tr>
+                    <tr>
+                        <td>Exec command allowlist</td>
+                        <td><span class="miss">✗ Missed</span></td>
+                        <td><span class="partial">△ Mentioned</span></td>
+                        <td><span class="check">✓ Full examples</span></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="security-summary">
+                <div class="security-stat">
+                    <div class="value" style="color: var(--danger)">6.5</div>
+                    <div class="label">GPT-4o Auto Score</div>
+                </div>
+                <div class="security-stat">
+                    <div class="value" style="color: var(--warning)">4.5</div>
+                    <div class="label">GPT-4o Pro Score</div>
+                </div>
+                <div class="security-stat">
+                    <div class="value" style="color: var(--success)">4.5</div>
+                    <div class="label">Qwen Score (lower = better)</div>
+                </div>
+                <div class="security-stat">
+                    <div class="value">~30s</div>
+                    <div class="label">Auto Time</div>
+                </div>
+                <div class="security-stat">
+                    <div class="value">~12min</div>
+                    <div class="label">Pro Time</div>
+                </div>
+                <div class="security-stat">
+                    <div class="value">~50s</div>
+                    <div class="label">Qwen Time</div>
+                </div>
+                <div class="security-stat">
+                    <div class="value">Included</div>
+                    <div class="label">Auto Cost</div>
+                </div>
+                <div class="security-stat">
+                    <div class="value">Included</div>
+                    <div class="label">Pro Cost</div>
+                </div>
+                <div class="security-stat">
+                    <div class="value" style="color: var(--qwen-primary)">$0.02</div>
+                    <div class="label">Qwen Cost</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 7: The Optimal Pipeline -->
+        <section>
+            <h2>The Optimal Pipeline</h2>
+            <div class="pipeline-flow">
+                <div class="pipeline-step opus">
+                    <div class="icon">🧠</div>
+                    <div class="name">Opus</div>
+                    <div class="action">Plans & Architecture</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step qwen">
+                    <div class="icon">🔥</div>
+                    <div class="name">Qwen</div>
+                    <div class="action">Reviews & Security</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step codex">
+                    <div class="icon">💻</div>
+                    <div class="name">Codex</div>
+                    <div class="action">Builds & Executes</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer>
+            <p>This page was generated by Qwen3.5-Plus (Alibaba Cloud)</p>
+            <div class="footer-links">
+                <a href="https://mikehelm.github.io/otto-model-comparison/" target="_blank">Opus 4.6 Version</a>
+                <span>·</span>
+                <a href="https://mikehelm.github.io/otto-model-comparison-local/" target="_blank">Local Qwen3 32B Version</a>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
