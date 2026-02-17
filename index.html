@@ -10,6 +10,7 @@
             padding: 0;
             box-sizing: border-box;
         }
+        html { scroll-behavior: smooth; }
 
         :root {
             --qwen-primary: #ffb800;
@@ -35,11 +36,52 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: var(--bg-dark);
+            background: linear-gradient(180deg, #0a0a0f 0%, #0d0d1a 40%, #0a0a0f 100%);
             color: var(--text-primary);
             line-height: 1.6;
             min-height: 100vh;
         }
+
+        /* Entrance animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { filter: drop-shadow(0 0 8px currentColor); }
+            50% { filter: drop-shadow(0 0 20px currentColor); }
+        }
+        @keyframes dashFlow {
+            to { stroke-dashoffset: -20; }
+        }
+        @keyframes barGrow {
+            from { width: 0%; }
+        }
+        @keyframes ringFill {
+            from { stroke-dashoffset: 226; }
+        }
+
+        section { animation: fadeInUp 0.6s ease-out both; }
+        section:nth-child(2) { animation-delay: 0.1s; }
+        section:nth-child(3) { animation-delay: 0.2s; }
+        section:nth-child(4) { animation-delay: 0.3s; }
+        section:nth-child(5) { animation-delay: 0.4s; }
+        section:nth-child(6) { animation-delay: 0.5s; }
+        section:nth-child(7) { animation-delay: 0.6s; }
+        section:nth-child(8) { animation-delay: 0.7s; }
+
+        .model-card { animation: fadeInUp 0.5s ease-out both; }
+        .model-card:nth-child(1) { animation-delay: 0.15s; }
+        .model-card:nth-child(2) { animation-delay: 0.3s; }
+        .model-card:nth-child(3) { animation-delay: 0.45s; }
 
         .container {
             max-width: 1400px;
@@ -50,13 +92,17 @@
         header {
             text-align: center;
             padding: 3rem 0;
-            background: linear-gradient(135deg, rgba(255,184,0,0.1) 0%, rgba(168,85,247,0.1) 100%);
+            background: linear-gradient(135deg, rgba(255,184,0,0.08) 0%, rgba(168,85,247,0.08) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-radius: 20px;
             margin-bottom: 3rem;
+            border: 1px solid rgba(255,255,255,0.06);
+            animation: fadeIn 0.8s ease-out;
         }
 
         h1 {
-            font-size: 2.5rem;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
             font-weight: 700;
             margin-bottom: 0.5rem;
             background: linear-gradient(135deg, var(--qwen-primary), var(--opus-primary));
@@ -75,7 +121,7 @@
         }
 
         h2 {
-            font-size: 1.8rem;
+            font-size: clamp(1.4rem, 4vw, 1.8rem);
             margin-bottom: 2rem;
             text-align: center;
             position: relative;
@@ -99,29 +145,52 @@
         }
 
         .model-card {
-            background: var(--bg-card);
+            background: rgba(18,18,26,0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-radius: 20px;
             padding: 2rem;
-            border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
         }
 
-        .model-card:hover {
-            transform: translateY(-5px);
-            background: var(--bg-card-hover);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        .model-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent 50%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
         }
 
-        .model-card.qwen { border-top: 3px solid var(--qwen-primary); }
-        .model-card.codex { border-top: 3px solid var(--codex-primary); }
-        .model-card.opus { border-top: 3px solid var(--opus-primary); }
+        .model-card:hover {
+            transform: translateY(-8px) scale(1.01);
+            background: rgba(26,26,37,0.85);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+        }
+
+        .model-card.qwen { border-top: 3px solid var(--qwen-primary); box-shadow: 0 -4px 30px rgba(255,184,0,0.08); }
+        .model-card.codex { border-top: 3px solid var(--codex-primary); box-shadow: 0 -4px 30px rgba(0,212,170,0.08); }
+        .model-card.opus { border-top: 3px solid var(--opus-primary); box-shadow: 0 -4px 30px rgba(168,85,247,0.08); }
+        .model-card.qwen:hover { box-shadow: 0 25px 50px rgba(255,184,0,0.12); }
+        .model-card.codex:hover { box-shadow: 0 25px 50px rgba(0,212,170,0.12); }
+        .model-card.opus:hover { box-shadow: 0 25px 50px rgba(168,85,247,0.12); }
 
         .model-icon {
             font-size: 3rem;
             margin-bottom: 1rem;
+            animation: pulseGlow 3s ease-in-out infinite;
         }
+        .qwen .model-icon { color: var(--qwen-primary); }
+        .codex .model-icon { color: var(--codex-primary); }
+        .opus .model-icon { color: var(--opus-primary); }
 
         .model-name {
             font-size: 1.5rem;
@@ -145,35 +214,43 @@
             text-align: center;
         }
 
-        .circle {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
+        .rating-ring {
+            width: 76px;
+            height: 76px;
+            position: relative;
+            margin: 0 auto 0.5rem;
+        }
+        .rating-ring svg {
+            width: 76px;
+            height: 76px;
+            transform: rotate(-90deg);
+        }
+        .rating-ring .ring-bg {
+            fill: none;
+            stroke: rgba(255,255,255,0.06);
+            stroke-width: 4;
+        }
+        .rating-ring .ring-fill {
+            fill: none;
+            stroke-width: 4;
+            stroke-linecap: round;
+            animation: ringFill 1.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+        }
+        .rating-ring .ring-value {
+            position: absolute;
+            inset: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
-            font-size: 1.2rem;
-            margin-bottom: 0.5rem;
-            position: relative;
+            font-size: 1.1rem;
         }
-
-        .circle::before {
-            content: '';
-            position: absolute;
-            inset: -3px;
-            border-radius: 50%;
-            padding: 3px;
-            background: linear-gradient(135deg, currentColor, transparent);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-        }
-
-        .circle.qwen { background: rgba(255,184,0,0.15); color: var(--qwen-primary); }
-        .circle.codex { background: rgba(0,212,170,0.15); color: var(--codex-primary); }
-        .circle.opus { background: rgba(168,85,247,0.15); color: var(--opus-primary); }
+        .qwen .ring-fill { stroke: var(--qwen-primary); }
+        .codex .ring-fill { stroke: var(--codex-primary); }
+        .opus .ring-fill { stroke: var(--opus-primary); }
+        .qwen .ring-value { color: var(--qwen-primary); }
+        .codex .ring-value { color: var(--codex-primary); }
+        .opus .ring-value { color: var(--opus-primary); }
 
         .rating-label {
             font-size: 0.75rem;
@@ -240,10 +317,21 @@
         }
 
         .cost-card {
-            background: var(--bg-card);
+            background: rgba(18,18,26,0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border-radius: 15px;
             padding: 1.5rem;
-            border: 1px solid var(--border-color);
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.5s ease-out both;
+        }
+        .cost-card:nth-child(1) { animation-delay: 0.1s; }
+        .cost-card:nth-child(2) { animation-delay: 0.2s; }
+        .cost-card:nth-child(3) { animation-delay: 0.3s; }
+        .cost-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.3);
         }
 
         .cost-card h3 {
@@ -340,8 +428,11 @@
             color: var(--text-secondary);
         }
 
+        .comparison-table tr {
+            transition: background 0.3s ease;
+        }
         .comparison-table tr:hover {
-            background: rgba(255,255,255,0.02);
+            background: rgba(255,255,255,0.04);
         }
 
         .winner {
@@ -356,9 +447,12 @@
 
         /* Bar Charts */
         .benchmark-container {
-            background: var(--bg-card);
+            background: rgba(18,18,26,0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border-radius: 15px;
             padding: 2rem;
+            border: 1px solid rgba(255,255,255,0.08);
         }
 
         .benchmark-item {
@@ -410,8 +504,11 @@
             padding-left: 0.75rem;
             font-size: 0.8rem;
             font-weight: 600;
-            transition: width 0.5s ease;
+            animation: barGrow 1.2s cubic-bezier(0.4, 0, 0.2, 1) both;
         }
+        .bar-row:nth-child(1) .bar-fill { animation-delay: 0.2s; }
+        .bar-row:nth-child(2) .bar-fill { animation-delay: 0.4s; }
+        .bar-row:nth-child(3) .bar-fill { animation-delay: 0.6s; }
 
         .bar-fill.qwen { background: linear-gradient(90deg, var(--qwen-secondary), var(--qwen-primary)); }
         .bar-fill.codex { background: linear-gradient(90deg, var(--codex-secondary), var(--codex-primary)); }
@@ -425,10 +522,22 @@
         }
 
         .win-card {
-            background: var(--bg-card);
+            background: rgba(18,18,26,0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border-radius: 15px;
             padding: 1.5rem;
-            border: 1px solid var(--border-color);
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.5s ease-out both;
+        }
+        .win-card:nth-child(1) { animation-delay: 0.1s; }
+        .win-card:nth-child(2) { animation-delay: 0.2s; }
+        .win-card:nth-child(3) { animation-delay: 0.3s; }
+        .win-card:nth-child(4) { animation-delay: 0.4s; }
+        .win-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.3);
         }
 
         .win-card.wins { border-left: 3px solid var(--success); }
@@ -558,19 +667,30 @@
         .pipeline-arrow {
             font-size: 1.5rem;
             color: var(--text-secondary);
+            position: relative;
         }
 
-        .pipeline-step.qwen { border-color: var(--qwen-primary); }
-        .pipeline-step.codex { border-color: var(--codex-primary); }
-        .pipeline-step.opus { border-color: var(--opus-primary); }
+        .pipeline-step {
+            animation: fadeInUp 0.5s ease-out both;
+        }
+        .pipeline-step:nth-child(1) { animation-delay: 0.2s; }
+        .pipeline-step:nth-child(3) { animation-delay: 0.5s; }
+        .pipeline-step:nth-child(5) { animation-delay: 0.8s; }
+
+        .pipeline-step.qwen { border-color: var(--qwen-primary); box-shadow: 0 0 20px rgba(255,184,0,0.15); }
+        .pipeline-step.codex { border-color: var(--codex-primary); box-shadow: 0 0 20px rgba(0,212,170,0.15); }
+        .pipeline-step.opus { border-color: var(--opus-primary); box-shadow: 0 0 20px rgba(168,85,247,0.15); }
+        .pipeline-step:hover { transform: scale(1.05); transition: transform 0.3s ease; }
 
         /* Footer */
         footer {
             text-align: center;
             padding: 3rem 0;
             margin-top: 4rem;
-            border-top: 1px solid var(--border-color);
+            border-top: 1px solid transparent;
+            border-image: linear-gradient(90deg, transparent, var(--qwen-primary), var(--opus-primary), transparent) 1;
             color: var(--text-secondary);
+            animation: fadeIn 1s ease-out 1s both;
         }
 
         footer a {
@@ -655,15 +775,24 @@
                     
                     <div class="ratings-container">
                         <div class="rating-circle">
-                            <div class="circle qwen">10</div>
+                            <div class="rating-ring">
+                                <svg viewBox="0 0 76 76"><circle class="ring-bg" cx="38" cy="38" r="36"/><circle class="ring-fill" cx="38" cy="38" r="36" stroke-dasharray="226.2" stroke-dashoffset="0.0" style="animation-delay:0.3s"/></svg>
+                                <div class="ring-value">10</div>
+                            </div>
                             <div class="rating-label">💰 Price</div>
                         </div>
                         <div class="rating-circle">
-                            <div class="circle qwen">9.5</div>
+                            <div class="rating-ring">
+                                <svg viewBox="0 0 76 76"><circle class="ring-bg" cx="38" cy="38" r="36"/><circle class="ring-fill" cx="38" cy="38" r="36" stroke-dasharray="226.2" stroke-dashoffset="11.3" style="animation-delay:0.5s"/></svg>
+                                <div class="ring-value">9.5</div>
+                            </div>
                             <div class="rating-label">⚡ Speed</div>
                         </div>
                         <div class="rating-circle">
-                            <div class="circle qwen">8.5</div>
+                            <div class="rating-ring">
+                                <svg viewBox="0 0 76 76"><circle class="ring-bg" cx="38" cy="38" r="36"/><circle class="ring-fill" cx="38" cy="38" r="36" stroke-dasharray="226.2" stroke-dashoffset="33.9" style="animation-delay:0.7s"/></svg>
+                                <div class="ring-value">8.5</div>
+                            </div>
                             <div class="rating-label">🧠 Intel</div>
                         </div>
                     </div>
@@ -717,15 +846,24 @@
                     
                     <div class="ratings-container">
                         <div class="rating-circle">
-                            <div class="circle codex">5</div>
+                            <div class="rating-ring">
+                                <svg viewBox="0 0 76 76"><circle class="ring-bg" cx="38" cy="38" r="36"/><circle class="ring-fill" cx="38" cy="38" r="36" stroke-dasharray="226.2" stroke-dashoffset="113.1" style="animation-delay:0.3s"/></svg>
+                                <div class="ring-value">5</div>
+                            </div>
                             <div class="rating-label">💰 Price</div>
                         </div>
                         <div class="rating-circle">
-                            <div class="circle codex">4</div>
+                            <div class="rating-ring">
+                                <svg viewBox="0 0 76 76"><circle class="ring-bg" cx="38" cy="38" r="36"/><circle class="ring-fill" cx="38" cy="38" r="36" stroke-dasharray="226.2" stroke-dashoffset="135.7" style="animation-delay:0.5s"/></svg>
+                                <div class="ring-value">4</div>
+                            </div>
                             <div class="rating-label">⚡ Speed</div>
                         </div>
                         <div class="rating-circle">
-                            <div class="circle codex">8.0</div>
+                            <div class="rating-ring">
+                                <svg viewBox="0 0 76 76"><circle class="ring-bg" cx="38" cy="38" r="36"/><circle class="ring-fill" cx="38" cy="38" r="36" stroke-dasharray="226.2" stroke-dashoffset="45.2" style="animation-delay:0.7s"/></svg>
+                                <div class="ring-value">8.0</div>
+                            </div>
                             <div class="rating-label">🧠 Intel</div>
                         </div>
                     </div>
@@ -779,15 +917,24 @@
                     
                     <div class="ratings-container">
                         <div class="rating-circle">
-                            <div class="circle opus">2</div>
+                            <div class="rating-ring">
+                                <svg viewBox="0 0 76 76"><circle class="ring-bg" cx="38" cy="38" r="36"/><circle class="ring-fill" cx="38" cy="38" r="36" stroke-dasharray="226.2" stroke-dashoffset="181.0" style="animation-delay:0.3s"/></svg>
+                                <div class="ring-value">2</div>
+                            </div>
                             <div class="rating-label">💰 Price</div>
                         </div>
                         <div class="rating-circle">
-                            <div class="circle opus">6</div>
+                            <div class="rating-ring">
+                                <svg viewBox="0 0 76 76"><circle class="ring-bg" cx="38" cy="38" r="36"/><circle class="ring-fill" cx="38" cy="38" r="36" stroke-dasharray="226.2" stroke-dashoffset="90.5" style="animation-delay:0.5s"/></svg>
+                                <div class="ring-value">6</div>
+                            </div>
                             <div class="rating-label">⚡ Speed</div>
                         </div>
                         <div class="rating-circle">
-                            <div class="circle opus">9.5</div>
+                            <div class="rating-ring">
+                                <svg viewBox="0 0 76 76"><circle class="ring-bg" cx="38" cy="38" r="36"/><circle class="ring-fill" cx="38" cy="38" r="36" stroke-dasharray="226.2" stroke-dashoffset="11.3" style="animation-delay:0.7s"/></svg>
+                                <div class="ring-value">9.5</div>
+                            </div>
                             <div class="rating-label">🧠 Intel</div>
                         </div>
                     </div>
@@ -1277,13 +1424,13 @@
                     <div class="name">Opus</div>
                     <div class="action">Plans & Architecture</div>
                 </div>
-                <div class="pipeline-arrow">→</div>
+                <svg width="80" height="30" class="pipeline-arrow-svg"><line x1="0" y1="15" x2="70" y2="15" stroke="#888" stroke-width="2" stroke-dasharray="8 4" style="animation: dashFlow 0.8s linear infinite"/><polygon points="70,8 80,15 70,22" fill="#888"/></svg>
                 <div class="pipeline-step qwen">
                     <div class="icon">🔥</div>
                     <div class="name">Qwen</div>
                     <div class="action">Reviews & Security</div>
                 </div>
-                <div class="pipeline-arrow">→</div>
+                <svg width="80" height="30" class="pipeline-arrow-svg"><line x1="0" y1="15" x2="70" y2="15" stroke="#888" stroke-width="2" stroke-dasharray="8 4" style="animation: dashFlow 0.8s linear infinite"/><polygon points="70,8 80,15 70,22" fill="#888"/></svg>
                 <div class="pipeline-step codex">
                     <div class="icon">💻</div>
                     <div class="name">Codex</div>
