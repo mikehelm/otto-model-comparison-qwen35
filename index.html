@@ -3,1451 +3,898 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Model Comparison - Qwen3.5-Plus vs Codex CLI vs Claude Opus 4.6</title>
+    <title>AI Model Comparison: Qwen vs Codex vs Opus</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        html { scroll-behavior: smooth; }
-
         :root {
-            --qwen-primary: #ffb800;
-            --qwen-secondary: #ff9500;
-            --codex-primary: #00d4aa;
-            --codex-secondary: #00a885;
-            --opus-primary: #a855f7;
-            --opus-secondary: #7c3aed;
-            --bg-dark: #0a0a0f;
-            --bg-card: #12121a;
-            --bg-card-hover: #1a1a25;
-            --text-primary: #ffffff;
-            --text-secondary: #a0a0b0;
-            --border-color: #2a2a3a;
-            --success: #22c55e;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --purple-glow: #a855f7;
-            --green-good: #22c55e;
-            --amber-mid: #f59e0b;
-            --red-low: #ef4444;
+            /* Color System */
+            --qwen-primary: #FFD700;
+            --qwen-accent: #FFA000;
+            --codex-primary: #00C853;
+            --codex-accent: #00E676;
+            --opus-primary: #8E44AD;
+            --opus-accent: #AB47BC;
+
+            --bg-dark: #0a0a1a;
+            --bg-light: #1a1a2e;
+            
+            --text-main: #ffffff;
+            --text-sec: #b0b0b0;
+            --text-ter: #888888;
+            
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-highlight: rgba(255, 255, 255, 0.1);
+
+            /* Tier Colors for Badges */
+            --tier-excellent: var(--model-color); /* Dynamic */
+            --tier-good: #00C853;
+            --tier-mediocre: #FFA000;
+            --tier-poor: #FF1744;
+
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(180deg, #0a0a0f 0%, #0d0d1a 40%, #0a0a0f 100%);
-            color: var(--text-primary);
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-light) 100%);
+            color: var(--text-main);
+            font-family: var(--font-sans);
             line-height: 1.6;
+            overflow-x: hidden;
             min-height: 100vh;
         }
 
-        /* Entrance animations */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes slideInLeft {
-            from { opacity: 0; transform: translateX(-40px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes pulseGlow {
-            0%, 100% { filter: drop-shadow(0 0 8px currentColor); }
-            50% { filter: drop-shadow(0 0 20px currentColor); }
-        }
-        @keyframes dashFlow {
-            to { stroke-dashoffset: -20; }
-        }
-        @keyframes barGrow {
-            from { width: 0%; }
-        }
-        @keyframes ringFill {
-            from { stroke-dashoffset: 226; }
-        }
-
-        section { animation: fadeInUp 0.6s ease-out both; }
-        section:nth-child(2) { animation-delay: 0.1s; }
-        section:nth-child(3) { animation-delay: 0.2s; }
-        section:nth-child(4) { animation-delay: 0.3s; }
-        section:nth-child(5) { animation-delay: 0.4s; }
-        section:nth-child(6) { animation-delay: 0.5s; }
-        section:nth-child(7) { animation-delay: 0.6s; }
-        section:nth-child(8) { animation-delay: 0.7s; }
-
-        .model-card { animation: fadeInUp 0.5s ease-out both; }
-        .model-card:nth-child(1) { animation-delay: 0.15s; }
-        .model-card:nth-child(2) { animation-delay: 0.3s; }
-        .model-card:nth-child(3) { animation-delay: 0.45s; }
+        h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.02em; }
+        p { color: var(--text-sec); }
 
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
         }
 
-        header {
+        /* Utilities */
+        .section-title {
             text-align: center;
-            padding: 3rem 0;
-            background: linear-gradient(135deg, rgba(255,184,0,0.08) 0%, rgba(168,85,247,0.08) 100%);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 20px;
+            font-size: clamp(2rem, 5vw, 3rem);
             margin-bottom: 3rem;
-            border: 1px solid rgba(255,255,255,0.06);
-            animation: fadeIn 0.8s ease-out;
-        }
-
-        h1 {
-            font-size: clamp(1.8rem, 5vw, 2.5rem);
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, var(--qwen-primary), var(--opus-primary));
+            background: linear-gradient(to right, #fff, #aaa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
+            opacity: 0;
+            animation: fadeUp 0.8s ease-out forwards;
         }
 
-        .subtitle {
-            color: var(--text-secondary);
-            font-size: 1.1rem;
-        }
-
-        section {
-            margin-bottom: 4rem;
-        }
-
-        h2 {
-            font-size: clamp(1.4rem, 4vw, 1.8rem);
-            margin-bottom: 2rem;
-            text-align: center;
-            position: relative;
-        }
-
-        h2::after {
-            content: '';
-            display: block;
-            width: 60px;
-            height: 3px;
-            background: linear-gradient(90deg, var(--qwen-primary), var(--opus-primary));
-            margin: 0.5rem auto 0;
-            border-radius: 2px;
-        }
-
-        /* Model Cards */
-        .model-grid {
+        .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 2rem;
         }
 
-        .model-card {
-            background: rgba(18,18,26,0.7);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 20px;
+        @media (min-width: 768px) { .grid-2 { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 900px) { .grid-3 { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 768px) { .grid-3 { grid-template-columns: 1fr; } }
+
+        /* Glassmorphism Card */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
             padding: 2rem;
-            border: 1px solid rgba(255,255,255,0.08);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .model-card::before {
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-color: var(--glass-highlight);
+        }
+
+        /* Gradient Borders via Pseudo-element */
+        .card::before {
             content: '';
             position: absolute;
             inset: 0;
-            border-radius: 20px;
             padding: 1px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent 50%);
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
             mask-composite: exclude;
             pointer-events: none;
         }
 
-        .model-card:hover {
-            transform: translateY(-8px) scale(1.01);
-            background: rgba(26,26,37,0.85);
-            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+        /* Animations */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .model-card.qwen { border-top: 3px solid var(--qwen-primary); box-shadow: 0 -4px 30px rgba(255,184,0,0.08); }
-        .model-card.codex { border-top: 3px solid var(--codex-primary); box-shadow: 0 -4px 30px rgba(0,212,170,0.08); }
-        .model-card.opus { border-top: 3px solid var(--opus-primary); box-shadow: 0 -4px 30px rgba(168,85,247,0.08); }
-        .model-card.qwen:hover { box-shadow: 0 25px 50px rgba(255,184,0,0.12); }
-        .model-card.codex:hover { box-shadow: 0 25px 50px rgba(0,212,170,0.12); }
-        .model-card.opus:hover { box-shadow: 0 25px 50px rgba(168,85,247,0.12); }
-
-        .model-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            animation: pulseGlow 3s ease-in-out infinite;
-        }
-        .qwen .model-icon { color: var(--qwen-primary); }
-        .codex .model-icon { color: var(--codex-primary); }
-        .opus .model-icon { color: var(--opus-primary); }
-
-        .model-name {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
+        @keyframes fillRing {
+            to { stroke-dashoffset: 0; }
         }
 
-        .model-subtitle {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
+        @keyframes growBar {
+            from { width: 0; }
+        }
+
+        @keyframes dashMove {
+            to { stroke-dashoffset: -20; }
+        }
+
+        .anim-delay-1 { animation-delay: 0.1s; }
+        .anim-delay-2 { animation-delay: 0.2s; }
+        .anim-delay-3 { animation-delay: 0.3s; }
+        .anim-delay-4 { animation-delay: 0.4s; }
+
+        /* SECTION 1: Models */
+        .model-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
             margin-bottom: 1.5rem;
         }
 
+        .model-icon {
+            font-size: 2.5rem;
+            filter: drop-shadow(0 0 10px currentColor);
+        }
+
+        .model-info h3 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+        .model-subtitle { font-size: 0.9rem; color: var(--text-ter); }
+
+        /* Rating Rings */
         .ratings-container {
             display: flex;
             justify-content: space-around;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
 
-        .rating-circle {
-            text-align: center;
+        .rating-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .rating-ring {
-            width: 76px;
-            height: 76px;
+        .ring-wrapper {
             position: relative;
-            margin: 0 auto 0.5rem;
+            width: 60px;
+            height: 60px;
         }
-        .rating-ring svg {
-            width: 76px;
-            height: 76px;
+
+        .ring-svg {
             transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
         }
-        .rating-ring .ring-bg {
+
+        .ring-bg {
             fill: none;
-            stroke: rgba(255,255,255,0.06);
+            stroke: rgba(255,255,255,0.1);
             stroke-width: 4;
         }
-        .rating-ring .ring-fill {
+
+        .ring-progress {
             fill: none;
             stroke-width: 4;
             stroke-linecap: round;
-            animation: ringFill 1.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+            stroke-dasharray: 157; /* 2 * PI * 25 */
+            stroke-dashoffset: 157;
+            animation: fillRing 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
-        .rating-ring .ring-value {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-        .qwen .ring-fill { stroke: var(--qwen-primary); }
-        .codex .ring-fill { stroke: var(--codex-primary); }
-        .opus .ring-fill { stroke: var(--opus-primary); }
-        .qwen .ring-value { color: var(--qwen-primary); }
-        .codex .ring-value { color: var(--codex-primary); }
-        .opus .ring-value { color: var(--opus-primary); }
 
         .rating-label {
             font-size: 0.75rem;
-            color: var(--text-secondary);
+            color: var(--text-ter);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
         .overall-score {
             text-align: center;
-            padding: 1rem;
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
-            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--glass-border);
         }
 
-        .overall-score .score {
-            font-size: 2rem;
-            font-weight: 700;
-        }
-
-        .overall-score .label {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-        }
-
-        .sub-categories {
+        /* Intelligence Grid */
+        .intel-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 0.5rem;
+            gap: 0.75rem;
         }
 
-        .sub-cat {
-            text-align: center;
-            padding: 0.5rem;
-            background: rgba(255,255,255,0.03);
-            border-radius: 8px;
+        .intel-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
         }
 
-        .sub-cat-dot {
-            width: 12px;
-            height: 12px;
+        .intel-circle {
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
-            margin: 0 auto 0.25rem;
-            box-shadow: 0 0 8px currentColor;
-        }
-
-        .dot-purple { background: var(--purple-glow); color: var(--purple-glow); }
-        .dot-green { background: var(--green-good); color: var(--green-good); }
-        .dot-amber { background: var(--amber-mid); color: var(--amber-mid); }
-        .dot-red { background: var(--red-low); color: var(--red-low); }
-
-        .sub-cat-name {
-            font-size: 0.65rem;
-            color: var(--text-secondary);
-            line-height: 1.2;
-        }
-
-        /* Cost Cards */
-        .cost-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .cost-card {
-            background: rgba(18,18,26,0.6);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-radius: 15px;
-            padding: 1.5rem;
-            border: 1px solid rgba(255,255,255,0.08);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            animation: fadeInUp 0.5s ease-out both;
-        }
-        .cost-card:nth-child(1) { animation-delay: 0.1s; }
-        .cost-card:nth-child(2) { animation-delay: 0.2s; }
-        .cost-card:nth-child(3) { animation-delay: 0.3s; }
-        .cost-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 30px rgba(0,0,0,0.3);
-        }
-
-        .cost-card h3 {
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #000;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
         }
 
-        .cost-item {
+        .intel-label {
+            font-size: 0.6rem;
+            text-align: center;
+            color: var(--text-sec);
+            line-height: 1.1;
+        }
+
+        /* SECTION 2: Costs */
+        .cost-card ul {
+            list-style: none;
+            margin-top: 1rem;
+        }
+        .cost-card li {
             display: flex;
             justify-content: space-between;
-            padding: 0.75rem 0;
+            padding: 0.5rem 0;
             border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .cost-item:last-child {
-            border-bottom: none;
-        }
-
-        .cost-label {
-            color: var(--text-secondary);
-        }
-
-        .cost-value {
-            font-weight: 600;
-        }
-
-        .cost-note {
-            margin-top: 1rem;
-            padding: 1rem;
-            background: rgba(255,255,255,0.03);
-            border-radius: 10px;
             font-size: 0.9rem;
-            color: var(--text-secondary);
+        }
+        .cost-card li:last-child { border-bottom: none; }
+        .cost-val { font-family: monospace; color: var(--text-main); }
+
+        .sub-note {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-ter);
+            font-style: italic;
         }
 
-        .cost-table {
+        .scale-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 2rem;
-            background: var(--bg-card);
-            border-radius: 15px;
-            overflow: hidden;
-        }
-
-        .cost-table th,
-        .cost-table td {
-            padding: 1rem;
-            text-align: center;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .cost-table th {
-            background: rgba(255,255,255,0.05);
-            font-weight: 600;
-        }
-
-        .cost-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .cost-table tr:hover {
-            background: rgba(255,255,255,0.02);
-        }
-
-        /* Comparison Table */
-        .comparison-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: var(--bg-card);
-            border-radius: 15px;
-            overflow: hidden;
-        }
-
-        .comparison-table th,
-        .comparison-table td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .comparison-table th {
-            background: rgba(255,255,255,0.05);
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            letter-spacing: 0.5px;
-        }
-
-        .comparison-table td:first-child {
-            font-weight: 500;
-            color: var(--text-secondary);
-        }
-
-        .comparison-table tr {
-            transition: background 0.3s ease;
-        }
-        .comparison-table tr:hover {
-            background: rgba(255,255,255,0.04);
-        }
-
-        .winner {
-            background: rgba(34,197,94,0.15) !important;
-            color: var(--success);
-            font-weight: 600;
-        }
-
-        .winner::before {
-            content: '👑 ';
-        }
-
-        /* Bar Charts */
-        .benchmark-container {
-            background: rgba(18,18,26,0.6);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-radius: 15px;
-            padding: 2rem;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .benchmark-item {
-            margin-bottom: 2rem;
-        }
-
-        .benchmark-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .benchmark-label {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .bar-container {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .bar-row {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .bar-name {
-            width: 60px;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-
-        .bar-track {
-            flex: 1;
-            height: 24px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        .bar-fill {
-            height: 100%;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            padding-left: 0.75rem;
-            font-size: 0.8rem;
-            font-weight: 600;
-            animation: barGrow 1.2s cubic-bezier(0.4, 0, 0.2, 1) both;
-        }
-        .bar-row:nth-child(1) .bar-fill { animation-delay: 0.2s; }
-        .bar-row:nth-child(2) .bar-fill { animation-delay: 0.4s; }
-        .bar-row:nth-child(3) .bar-fill { animation-delay: 0.6s; }
-
-        .bar-fill.qwen { background: linear-gradient(90deg, var(--qwen-secondary), var(--qwen-primary)); }
-        .bar-fill.codex { background: linear-gradient(90deg, var(--codex-secondary), var(--codex-primary)); }
-        .bar-fill.opus { background: linear-gradient(90deg, var(--opus-secondary), var(--opus-primary)); }
-
-        /* Win Cards */
-        .win-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .win-card {
-            background: rgba(18,18,26,0.6);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-radius: 15px;
-            padding: 1.5rem;
-            border: 1px solid rgba(255,255,255,0.08);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            animation: fadeInUp 0.5s ease-out both;
-        }
-        .win-card:nth-child(1) { animation-delay: 0.1s; }
-        .win-card:nth-child(2) { animation-delay: 0.2s; }
-        .win-card:nth-child(3) { animation-delay: 0.3s; }
-        .win-card:nth-child(4) { animation-delay: 0.4s; }
-        .win-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 30px rgba(0,0,0,0.3);
-        }
-
-        .win-card.wins { border-left: 3px solid var(--success); }
-        .win-card.not { border-left: 3px solid var(--danger); }
-
-        .win-card h3 {
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .win-list {
-            list-style: none;
-        }
-
-        .win-list li {
-            padding: 0.5rem 0;
-            padding-left: 1.5rem;
-            position: relative;
-            color: var(--text-secondary);
-        }
-
-        .win-card.wins .win-list li::before {
-            content: '✓';
-            position: absolute;
-            left: 0;
-            color: var(--success);
-            font-weight: 700;
-        }
-
-        .win-card.not .win-list li::before {
-            content: '✗';
-            position: absolute;
-            left: 0;
-            color: var(--danger);
-            font-weight: 700;
-        }
-
-        /* Security Review Table */
-        .security-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: var(--bg-card);
-            border-radius: 15px;
-            overflow: hidden;
-        }
-
-        .security-table th,
-        .security-table td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .security-table th {
-            background: rgba(255,255,255,0.05);
-            font-weight: 600;
-        }
-
-        .security-table .check { color: var(--success); }
-        .security-table .miss { color: var(--danger); }
-        .security-table .partial { color: var(--warning); }
-
-        .security-summary {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .security-stat {
-            background: rgba(255,255,255,0.05);
-            padding: 1rem;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        .security-stat .value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
-
-        .security-stat .label {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-        }
-
-        /* Pipeline Flow */
-        .pipeline-flow {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-            padding: 2rem;
-            background: var(--bg-card);
-            border-radius: 15px;
-        }
-
-        .pipeline-step {
-            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
-            padding: 1.5rem 2rem;
-            border-radius: 15px;
-            text-align: center;
-            min-width: 150px;
-            border: 1px solid var(--border-color);
-        }
-
-        .pipeline-step .icon {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .pipeline-step .name {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .pipeline-step .action {
-            color: var(--text-secondary);
             font-size: 0.9rem;
         }
+        .scale-table th, .scale-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .scale-table th { color: var(--text-ter); font-weight: normal; }
+        .scale-table tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+        .scale-table tr:hover { background: rgba(255,255,255,0.05); }
 
-        .pipeline-arrow {
-            font-size: 1.5rem;
-            color: var(--text-secondary);
+        /* SECTION 3: Head to Head */
+        .comparison-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 1rem;
+        }
+        .comparison-table th, .comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .comparison-table th:first-child, .comparison-table td:first-child {
+            position: sticky;
+            left: 0;
+            background: rgba(10, 10, 26, 0.95);
+            backdrop-filter: blur(5px);
+            z-index: 2;
+            border-right: 1px solid var(--glass-border);
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .winner-cell {
+            background: rgba(255,255,255,0.08);
+            font-weight: bold;
             position: relative;
         }
-
-        .pipeline-step {
-            animation: fadeInUp 0.5s ease-out both;
+        .winner-cell::after {
+            content: '👑';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 0.8rem;
         }
-        .pipeline-step:nth-child(1) { animation-delay: 0.2s; }
-        .pipeline-step:nth-child(3) { animation-delay: 0.5s; }
-        .pipeline-step:nth-child(5) { animation-delay: 0.8s; }
 
-        .pipeline-step.qwen { border-color: var(--qwen-primary); box-shadow: 0 0 20px rgba(255,184,0,0.15); }
-        .pipeline-step.codex { border-color: var(--codex-primary); box-shadow: 0 0 20px rgba(0,212,170,0.15); }
-        .pipeline-step.opus { border-color: var(--opus-primary); box-shadow: 0 0 20px rgba(168,85,247,0.15); }
-        .pipeline-step:hover { transform: scale(1.05); transition: transform 0.3s ease; }
+        /* SECTION 4: Benchmarks */
+        .benchmark-group {
+            margin-bottom: 2rem;
+        }
+        .benchmark-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        .bar-container {
+            height: 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        .bar {
+            height: 100%;
+            border-radius: 6px;
+            width: 0;
+            animation: growBar 1.5s ease-out forwards;
+            position: relative;
+        }
+        .bar span {
+            position: absolute;
+            right: -30px;
+            top: -2px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        /* SECTION 5: Strengths/Limitations */
+        .strength-card h4 { margin-bottom: 1rem; font-size: 1.2rem; }
+        .tag-cloud { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .tag {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* SECTION 6: Real World Test */
+        .test-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        .test-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .status-found { color: var(--codex-primary); font-weight: bold; }
+        .status-missed { color: var(--text-ter); }
+        .summary-row {
+            background: rgba(255,255,255,0.05);
+            font-weight: bold;
+        }
+
+        /* SECTION 7: Pipeline */
+        .pipeline-flow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            padding: 2rem 0;
+        }
+        @media(min-width: 768px) {
+            .pipeline-flow { flex-direction: row; justify-content: center; }
+        }
+        
+        .flow-node {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        .flow-node span { font-size: 2rem; margin-bottom: 0.5rem; }
+        .flow-node p { font-size: 0.8rem; font-weight: bold; }
+        
+        .flow-arrow {
+            position: relative;
+            width: 100px;
+            height: 4px;
+            background: repeating-linear-gradient(90deg, #fff, #fff 10px, transparent 10px, transparent 20px);
+            animation: dashMove 1s linear infinite;
+        }
+        @media(max-width: 768px) {
+            .flow-arrow { width: 4px; height: 60px; background: repeating-linear-gradient(0deg, #fff, #fff 10px, transparent 10px, transparent 20px); }
+        }
 
         /* Footer */
         footer {
-            text-align: center;
-            padding: 3rem 0;
             margin-top: 4rem;
-            border-top: 1px solid transparent;
-            border-image: linear-gradient(90deg, transparent, var(--qwen-primary), var(--opus-primary), transparent) 1;
-            color: var(--text-secondary);
-            animation: fadeIn 1s ease-out 1s both;
+            padding: 2rem;
+            border-top: 1px solid var(--glass-border);
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-ter);
+            background: linear-gradient(to top, rgba(0,0,0,0.2), transparent);
         }
+        footer a { color: var(--text-sec); text-decoration: none; transition: color 0.2s; }
+        footer a:hover { color: var(--text-main); }
 
-        footer a {
-            color: var(--qwen-primary);
-            text-decoration: none;
-            margin: 0 0.5rem;
-        }
+        /* Specific Model Classes */
+        .qwen-theme { --model-color: var(--qwen-primary); }
+        .codex-theme { --model-color: var(--codex-primary); }
+        .opus-theme { --model-color: var(--opus-primary); }
 
-        footer a:hover {
-            text-decoration: underline;
-        }
+        .border-qwen { border-color: var(--qwen-primary); }
+        .border-codex { border-color: var(--codex-primary); }
+        .border-opus { border-color: var(--opus-primary); }
 
-        .footer-links {
-            margin-top: 1rem;
-        }
+        .text-qwen { color: var(--qwen-primary); }
+        .text-codex { color: var(--codex-primary); }
+        .text-opus { color: var(--opus-primary); }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .container {
-                padding: 1rem;
-            }
+        .bg-qwen { background-color: var(--qwen-primary); }
+        .bg-codex { background-color: var(--codex-primary); }
+        .bg-opus { background-color: var(--opus-primary); }
 
-            h1 {
-                font-size: 1.8rem;
-            }
-
-            h2 {
-                font-size: 1.4rem;
-            }
-
-            .model-grid,
-            .cost-grid,
-            .win-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .sub-categories {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .comparison-table,
-            .cost-table,
-            .security-table {
-                font-size: 0.85rem;
-            }
-
-            .comparison-table th,
-            .comparison-table td,
-            .cost-table th,
-            .cost-table td,
-            .security-table th,
-            .security-table td {
-                padding: 0.75rem 0.5rem;
-            }
-
-            .pipeline-flow {
-                flex-direction: column;
-            }
-
-            .pipeline-arrow {
-                transform: rotate(90deg);
-            }
-        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>AI Model Comparison</h1>
-            <p class="subtitle">Qwen3.5-Plus vs Codex CLI (GPT-5.3) vs Claude Opus 4.6</p>
-        </header>
 
-        <!-- SECTION 1: The Three Models -->
-        <section>
-            <h2>The Three Models</h2>
-            <div class="model-grid">
-                <!-- Qwen Card -->
-                <div class="model-card qwen">
-                    <div class="model-icon">🔥</div>
-                    <div class="model-name">Qwen3.5-Plus</div>
+<div class="container">
+
+    <!-- SECTION 1: The Three Models -->
+    <h2 class="section-title">The Three Models</h2>
+    <div class="grid grid-3">
+        
+        <!-- QWEN CARD -->
+        <div class="card qwen-theme anim-delay-1">
+            <div class="model-header">
+                <div class="model-icon text-qwen">🔥</div>
+                <div class="model-info">
+                    <h3 class="text-qwen">Qwen3.5-Plus</h3>
                     <div class="model-subtitle">Alibaba Cloud · 397B MoE</div>
-                    
-                    <div class="ratings-container">
-                        <div class="rating-circle">
-                            <div class="rating-ring">
-                                <svg viewBox="0 0 76 76"><circle class="ring-bg" cx="38" cy="38" r="36"/><circle class="ring-fill" cx="38" cy="38" r="36" stroke-dasharray="226.2" stroke-dashoffset="0.0" style="animation-delay:0.3s"/></svg>
-                                <div class="ring-value">10</div>
-                            </div>
-                            <div class="rating-label">💰 Price</div>
-                        </div>
-                        <div class="rating-circle">
-                            <div class="rating-ring">
-                                <svg viewBox="0 0 76 76"><circle class="ring-bg" cx="38" cy="38" r="36"/><circle class="ring-fill" cx="38" cy="38" r="36" stroke-dasharray="226.2" stroke-dashoffset="11.3" style="animation-delay:0.5s"/></svg>
-                                <div class="ring-value">9.5</div>
-                            </div>
-                            <div class="rating-label">⚡ Speed</div>
-                        </div>
-                        <div class="rating-circle">
-                            <div class="rating-ring">
-                                <svg viewBox="0 0 76 76"><circle class="ring-bg" cx="38" cy="38" r="36"/><circle class="ring-fill" cx="38" cy="38" r="36" stroke-dasharray="226.2" stroke-dashoffset="33.9" style="animation-delay:0.7s"/></svg>
-                                <div class="ring-value">8.5</div>
-                            </div>
-                            <div class="rating-label">🧠 Intel</div>
-                        </div>
-                    </div>
-
-                    <div class="overall-score">
-                        <div class="score" style="color: var(--qwen-primary)">9.3</div>
-                        <div class="label">Overall Score</div>
-                    </div>
-
-                    <div class="sub-categories">
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-purple"></div>
-                            <div class="sub-cat-name">Knowledge<br>9</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-purple"></div>
-                            <div class="sub-cat-name">Reasoning<br>9</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-green"></div>
-                            <div class="sub-cat-name">Coding<br>8</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-purple"></div>
-                            <div class="sub-cat-name">Instruction<br>10</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-purple"></div>
-                            <div class="sub-cat-name">Security<br>9</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-green"></div>
-                            <div class="sub-cat-name">Arch<br>7</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-green"></div>
-                            <div class="sub-cat-name">Creative<br>7</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-purple"></div>
-                            <div class="sub-cat-name">Multimodal<br>9</div>
-                        </div>
-                    </div>
                 </div>
+            </div>
+            
+            <div class="ratings-container">
+                <div class="rating-item">
+                    <div class="ring-wrapper">
+                        <svg class="ring-svg"><circle class="ring-bg" cx="30" cy="30" r="25"/><circle class="ring-progress" cx="30" cy="30" r="25" stroke="var(--qwen-primary)" style="stroke-dashoffset: calc(157 - (157 * 10 / 10));"/></svg>
+                    </div>
+                    <span class="rating-label">Price</span>
+                </div>
+                <div class="rating-item">
+                    <div class="ring-wrapper">
+                        <svg class="ring-svg"><circle class="ring-bg" cx="30" cy="30" r="25"/><circle class="ring-progress" cx="30" cy="30" r="25" stroke="var(--qwen-primary)" style="stroke-dashoffset: calc(157 - (157 * 9.5 / 10));"/></svg>
+                    </div>
+                    <span class="rating-label">Speed</span>
+                </div>
+                <div class="rating-item">
+                    <div class="ring-wrapper">
+                        <svg class="ring-svg"><circle class="ring-bg" cx="30" cy="30" r="25"/><circle class="ring-progress" cx="30" cy="30" r="25" stroke="var(--qwen-primary)" style="stroke-dashoffset: calc(157 - (157 * 8.5 / 10));"/></svg>
+                    </div>
+                    <span class="rating-label">Intel</span>
+                </div>
+            </div>
+            <div class="overall-score text-qwen">Overall: 9.3</div>
 
-                <!-- Codex Card -->
-                <div class="model-card codex">
-                    <div class="model-icon">💻</div>
-                    <div class="model-name">Codex CLI</div>
+            <div class="intel-grid">
+                <!-- 9-10 Accent, 7-8 Green, 5-6 Amber, 3-4 Red -->
+                <div class="intel-item"><div class="intel-circle bg-qwen">9</div><span class="intel-label">Knowledge</span></div>
+                <div class="intel-item"><div class="intel-circle bg-qwen">9</div><span class="intel-label">Reasoning</span></div>
+                <div class="intel-item"><div class="intel-circle" style="background:var(--tier-good)">8</div><span class="intel-label">Coding</span></div>
+                <div class="intel-item"><div class="intel-circle bg-qwen">10</div><span class="intel-label">Instr. Follow</span></div>
+                <div class="intel-item"><div class="intel-circle bg-qwen">9</div><span class="intel-label">Security</span></div>
+                <div class="intel-item"><div class="intel-circle" style="background:var(--tier-good)">7</div><span class="intel-label">Arch Plan</span></div>
+                <div class="intel-item"><div class="intel-circle" style="background:var(--tier-good)">7</div><span class="intel-label">Creative</span></div>
+                <div class="intel-item"><div class="intel-circle bg-qwen">9</div><span class="intel-label">Multimodal</span></div>
+            </div>
+        </div>
+
+        <!-- CODEX CARD -->
+        <div class="card codex-theme anim-delay-2">
+            <div class="model-header">
+                <div class="model-icon text-codex">💻</div>
+                <div class="model-info">
+                    <h3 class="text-codex">Codex CLI</h3>
                     <div class="model-subtitle">OpenAI · GPT-5.3 · Sandboxed</div>
-                    
-                    <div class="ratings-container">
-                        <div class="rating-circle">
-                            <div class="rating-ring">
-                                <svg viewBox="0 0 76 76"><circle class="ring-bg" cx="38" cy="38" r="36"/><circle class="ring-fill" cx="38" cy="38" r="36" stroke-dasharray="226.2" stroke-dashoffset="113.1" style="animation-delay:0.3s"/></svg>
-                                <div class="ring-value">5</div>
-                            </div>
-                            <div class="rating-label">💰 Price</div>
-                        </div>
-                        <div class="rating-circle">
-                            <div class="rating-ring">
-                                <svg viewBox="0 0 76 76"><circle class="ring-bg" cx="38" cy="38" r="36"/><circle class="ring-fill" cx="38" cy="38" r="36" stroke-dasharray="226.2" stroke-dashoffset="135.7" style="animation-delay:0.5s"/></svg>
-                                <div class="ring-value">4</div>
-                            </div>
-                            <div class="rating-label">⚡ Speed</div>
-                        </div>
-                        <div class="rating-circle">
-                            <div class="rating-ring">
-                                <svg viewBox="0 0 76 76"><circle class="ring-bg" cx="38" cy="38" r="36"/><circle class="ring-fill" cx="38" cy="38" r="36" stroke-dasharray="226.2" stroke-dashoffset="45.2" style="animation-delay:0.7s"/></svg>
-                                <div class="ring-value">8.0</div>
-                            </div>
-                            <div class="rating-label">🧠 Intel</div>
-                        </div>
-                    </div>
-
-                    <div class="overall-score">
-                        <div class="score" style="color: var(--codex-primary)">5.7</div>
-                        <div class="label">Overall Score</div>
-                    </div>
-
-                    <div class="sub-categories">
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-green"></div>
-                            <div class="sub-cat-name">Knowledge<br>8</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-green"></div>
-                            <div class="sub-cat-name">Reasoning<br>7</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-purple"></div>
-                            <div class="sub-cat-name">Coding<br>10</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-green"></div>
-                            <div class="sub-cat-name">Instruction<br>7</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-red"></div>
-                            <div class="sub-cat-name">Security<br>4</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-red"></div>
-                            <div class="sub-cat-name">Arch<br>4</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-red"></div>
-                            <div class="sub-cat-name">Creative<br>5</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-red"></div>
-                            <div class="sub-cat-name">Multimodal<br>3</div>
-                        </div>
-                    </div>
                 </div>
+            </div>
+            
+            <div class="ratings-container">
+                <div class="rating-item">
+                    <div class="ring-wrapper">
+                        <svg class="ring-svg"><circle class="ring-bg" cx="30" cy="30" r="25"/><circle class="ring-progress" cx="30" cy="30" r="25" stroke="var(--codex-primary)" style="stroke-dashoffset: calc(157 - (157 * 5 / 10));"/></svg>
+                    </div>
+                    <span class="rating-label">Price</span>
+                </div>
+                <div class="rating-item">
+                    <div class="ring-wrapper">
+                        <svg class="ring-svg"><circle class="ring-bg" cx="30" cy="30" r="25"/><circle class="ring-progress" cx="30" cy="30" r="25" stroke="var(--codex-primary)" style="stroke-dashoffset: calc(157 - (157 * 4 / 10));"/></svg>
+                    </div>
+                    <span class="rating-label">Speed</span>
+                </div>
+                <div class="rating-item">
+                    <div class="ring-wrapper">
+                        <svg class="ring-svg"><circle class="ring-bg" cx="30" cy="30" r="25"/><circle class="ring-progress" cx="30" cy="30" r="25" stroke="var(--codex-primary)" style="stroke-dashoffset: calc(157 - (157 * 8.0 / 10));"/></svg>
+                    </div>
+                    <span class="rating-label">Intel</span>
+                </div>
+            </div>
+            <div class="overall-score text-codex">Overall: 5.7</div>
 
-                <!-- Opus Card -->
-                <div class="model-card opus">
-                    <div class="model-icon">🧠</div>
-                    <div class="model-name">Claude Opus 4.6</div>
+            <div class="intel-grid">
+                <div class="intel-item"><div class="intel-circle" style="background:var(--tier-good)">8</div><span class="intel-label">Knowledge</span></div>
+                <div class="intel-item"><div class="intel-circle" style="background:var(--tier-good)">7</div><span class="intel-label">Reasoning</span></div>
+                <div class="intel-item"><div class="intel-circle bg-codex">10</div><span class="intel-label">Coding</span></div>
+                <div class="intel-item"><div class="intel-circle" style="background:var(--tier-good)">7</div><span class="intel-label">Instr. Follow</span></div>
+                <div class="intel-item"><div class="intel-circle" style="background:var(--tier-poor); opacity:0.7">4</div><span class="intel-label">Security</span></div>
+                <div class="intel-item"><div class="intel-circle" style="background:var(--tier-poor); opacity:0.7">4</div><span class="intel-label">Arch Plan</span></div>
+                <div class="intel-item"><div class="intel-circle" style="background:var(--tier-mediocre)">5</div><span class="intel-label">Creative</span></div>
+                <div class="intel-item"><div class="intel-circle" style="background:var(--tier-poor); opacity:0.7">3</div><span class="intel-label">Multimodal</span></div>
+            </div>
+        </div>
+
+        <!-- OPUS CARD -->
+        <div class="card opus-theme anim-delay-3">
+            <div class="model-header">
+                <div class="model-icon text-opus">🧠</div>
+                <div class="model-info">
+                    <h3 class="text-opus">Opus 4.6</h3>
                     <div class="model-subtitle">Anthropic · Frontier Reasoning</div>
-                    
-                    <div class="ratings-container">
-                        <div class="rating-circle">
-                            <div class="rating-ring">
-                                <svg viewBox="0 0 76 76"><circle class="ring-bg" cx="38" cy="38" r="36"/><circle class="ring-fill" cx="38" cy="38" r="36" stroke-dasharray="226.2" stroke-dashoffset="181.0" style="animation-delay:0.3s"/></svg>
-                                <div class="ring-value">2</div>
-                            </div>
-                            <div class="rating-label">💰 Price</div>
-                        </div>
-                        <div class="rating-circle">
-                            <div class="rating-ring">
-                                <svg viewBox="0 0 76 76"><circle class="ring-bg" cx="38" cy="38" r="36"/><circle class="ring-fill" cx="38" cy="38" r="36" stroke-dasharray="226.2" stroke-dashoffset="90.5" style="animation-delay:0.5s"/></svg>
-                                <div class="ring-value">6</div>
-                            </div>
-                            <div class="rating-label">⚡ Speed</div>
-                        </div>
-                        <div class="rating-circle">
-                            <div class="rating-ring">
-                                <svg viewBox="0 0 76 76"><circle class="ring-bg" cx="38" cy="38" r="36"/><circle class="ring-fill" cx="38" cy="38" r="36" stroke-dasharray="226.2" stroke-dashoffset="11.3" style="animation-delay:0.7s"/></svg>
-                                <div class="ring-value">9.5</div>
-                            </div>
-                            <div class="rating-label">🧠 Intel</div>
-                        </div>
-                    </div>
-
-                    <div class="overall-score">
-                        <div class="score" style="color: var(--opus-primary)">5.8</div>
-                        <div class="label">Overall Score</div>
-                    </div>
-
-                    <div class="sub-categories">
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-green"></div>
-                            <div class="sub-cat-name">Knowledge<br>8</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-purple"></div>
-                            <div class="sub-cat-name">Reasoning<br>9</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-green"></div>
-                            <div class="sub-cat-name">Coding<br>8</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-purple"></div>
-                            <div class="sub-cat-name">Instruction<br>9</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-purple"></div>
-                            <div class="sub-cat-name">Security<br>9</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-purple"></div>
-                            <div class="sub-cat-name">Arch<br>10</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-purple"></div>
-                            <div class="sub-cat-name">Creative<br>10</div>
-                        </div>
-                        <div class="sub-cat">
-                            <div class="sub-cat-dot dot-purple"></div>
-                            <div class="sub-cat-name">Multimodal<br>9</div>
-                        </div>
-                    </div>
                 </div>
             </div>
-        </section>
-
-        <!-- SECTION 2: API Cost Comparison -->
-        <section>
-            <h2>API Cost Comparison</h2>
-            <div class="cost-grid">
-                <div class="cost-card">
-                    <h3 style="color: var(--qwen-primary)">🔥 Qwen3.5-Plus</h3>
-                    <div class="cost-item">
-                        <span class="cost-label">Input (per 1M tokens)</span>
-                        <span class="cost-value">$0.80</span>
+            
+            <div class="ratings-container">
+                <div class="rating-item">
+                    <div class="ring-wrapper">
+                        <svg class="ring-svg"><circle class="ring-bg" cx="30" cy="30" r="25"/><circle class="ring-progress" cx="30" cy="30" r="25" stroke="var(--opus-primary)" style="stroke-dashoffset: calc(157 - (157 * 2 / 10));"/></svg>
                     </div>
-                    <div class="cost-item">
-                        <span class="cost-label">Output (per 1M tokens)</span>
-                        <span class="cost-value">$2.00</span>
-                    </div>
-                    <div class="cost-item">
-                        <span class="cost-label">Context Window</span>
-                        <span class="cost-value">1M tokens</span>
-                    </div>
-                    <div class="cost-item">
-                        <span class="cost-label">Per Typical Review</span>
-                        <span class="cost-value">$0.02</span>
-                    </div>
+                    <span class="rating-label">Price</span>
                 </div>
-
-                <div class="cost-card">
-                    <h3 style="color: var(--codex-primary)">💻 Codex CLI</h3>
-                    <div class="cost-item">
-                        <span class="cost-label">Input (per 1M tokens)</span>
-                        <span class="cost-value">$2.50</span>
+                <div class="rating-item">
+                    <div class="ring-wrapper">
+                        <svg class="ring-svg"><circle class="ring-bg" cx="30" cy="30" r="25"/><circle class="ring-progress" cx="30" cy="30" r="25" stroke="var(--opus-primary)" style="stroke-dashoffset: calc(157 - (157 * 6 / 10));"/></svg>
                     </div>
-                    <div class="cost-item">
-                        <span class="cost-label">Output (per 1M tokens)</span>
-                        <span class="cost-value">$10.00</span>
-                    </div>
-                    <div class="cost-item">
-                        <span class="cost-label">Context Window</span>
-                        <span class="cost-value">200K tokens</span>
-                    </div>
-                    <div class="cost-item">
-                        <span class="cost-label">Per Typical Session</span>
-                        <span class="cost-value">$0.05</span>
-                    </div>
+                    <span class="rating-label">Speed</span>
                 </div>
-
-                <div class="cost-card">
-                    <h3 style="color: var(--opus-primary)">🧠 Claude Opus 4.6</h3>
-                    <div class="cost-item">
-                        <span class="cost-label">Input (per 1M tokens)</span>
-                        <span class="cost-value">$15.00</span>
+                <div class="rating-item">
+                    <div class="ring-wrapper">
+                        <svg class="ring-svg"><circle class="ring-bg" cx="30" cy="30" r="25"/><circle class="ring-progress" cx="30" cy="30" r="25" stroke="var(--opus-primary)" style="stroke-dashoffset: calc(157 - (157 * 9.5 / 10));"/></svg>
                     </div>
-                    <div class="cost-item">
-                        <span class="cost-label">Output (per 1M tokens)</span>
-                        <span class="cost-value">$75.00</span>
-                    </div>
-                    <div class="cost-item">
-                        <span class="cost-label">Context Window</span>
-                        <span class="cost-value">200K tokens</span>
-                    </div>
-                    <div class="cost-item">
-                        <span class="cost-label">Per Typical Review</span>
-                        <span class="cost-value">$0.30</span>
-                    </div>
+                    <span class="rating-label">Intel</span>
                 </div>
             </div>
+            <div class="overall-score text-opus">Overall: 5.8</div>
 
-            <div class="cost-note">
-                💡 Subscriptions available: ChatGPT Pro ($200/mo) and Claude Max ($200/mo) for unlimited usage tiers.
+            <div class="intel-grid">
+                <div class="intel-item"><div class="intel-circle" style="background:var(--tier-good)">8</div><span class="intel-label">Knowledge</span></div>
+                <div class="intel-item"><div class="intel-circle bg-opus">9</div><span class="intel-label">Reasoning</span></div>
+                <div class="intel-item"><div class="intel-circle" style="background:var(--tier-good)">8</div><span class="intel-label">Coding</span></div>
+                <div class="intel-item"><div class="intel-circle bg-opus">9</div><span class="intel-label">Instr. Follow</span></div>
+                <div class="intel-item"><div class="intel-circle bg-opus">9</div><span class="intel-label">Security</span></div>
+                <div class="intel-item"><div class="intel-circle bg-opus">10</div><span class="intel-label">Arch Plan</span></div>
+                <div class="intel-item"><div class="intel-circle bg-opus">10</div><span class="intel-label">Creative</span></div>
+                <div class="intel-item"><div class="intel-circle bg-opus">9</div><span class="intel-label">Multimodal</span></div>
             </div>
-
-            <table class="cost-table">
-                <thead>
-                    <tr>
-                        <th>Usage Level</th>
-                        <th>Calls/Month</th>
-                        <th>Qwen Cost</th>
-                        <th>Codex Cost</th>
-                        <th>Opus Cost</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Light</td>
-                        <td>50</td>
-                        <td>$1.00</td>
-                        <td>$2.50</td>
-                        <td>$15.00</td>
-                    </tr>
-                    <tr>
-                        <td>Medium</td>
-                        <td>500</td>
-                        <td>$10.00</td>
-                        <td>$25.00</td>
-                        <td>$150.00</td>
-                    </tr>
-                    <tr>
-                        <td>Heavy</td>
-                        <td>2,000</td>
-                        <td>$40.00</td>
-                        <td>$100.00</td>
-                        <td>$600.00</td>
-                    </tr>
-                    <tr>
-                        <td>Pipeline</td>
-                        <td>5,000</td>
-                        <td>$100.00</td>
-                        <td>$250.00</td>
-                        <td>$1,500.00</td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
-
-        <!-- SECTION 3: Head-to-Head -->
-        <section>
-            <h2>Head-to-Head Comparison</h2>
-            <table class="comparison-table">
-                <thead>
-                    <tr>
-                        <th>Feature</th>
-                        <th>Qwen3.5-Plus</th>
-                        <th>Codex CLI</th>
-                        <th>Claude Opus 4.6</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Cost Input</td>
-                        <td class="winner">$0.80 / 1M</td>
-                        <td>$2.50 / 1M</td>
-                        <td>$15.00 / 1M</td>
-                    </tr>
-                    <tr>
-                        <td>Cost Output</td>
-                        <td class="winner">$2.00 / 1M</td>
-                        <td>$10.00 / 1M</td>
-                        <td>$75.00 / 1M</td>
-                    </tr>
-                    <tr>
-                        <td>Response Speed</td>
-                        <td class="winner">~2-5 seconds</td>
-                        <td>Slow (sandboxed)</td>
-                        <td>~5-15 seconds</td>
-                    </tr>
-                    <tr>
-                        <td>Context Window</td>
-                        <td class="winner">1M tokens</td>
-                        <td>200K tokens</td>
-                        <td>200K tokens</td>
-                    </tr>
-                    <tr>
-                        <td>MMLU-Pro</td>
-                        <td class="winner">87.8</td>
-                        <td>~86</td>
-                        <td>~85</td>
-                    </tr>
-                    <tr>
-                        <td>GPQA Diamond</td>
-                        <td class="winner">88.4</td>
-                        <td>~83</td>
-                        <td>86.8</td>
-                    </tr>
-                    <tr>
-                        <td>IFBench</td>
-                        <td>76.5</td>
-                        <td>Good</td>
-                        <td class="winner">Very Good</td>
-                    </tr>
-                    <tr>
-                        <td>SWE-Bench</td>
-                        <td>Good</td>
-                        <td class="winner">Best</td>
-                        <td>Very Good</td>
-                    </tr>
-                    <tr>
-                        <td>Code Execution</td>
-                        <td>No</td>
-                        <td class="winner">Yes (sandbox)</td>
-                        <td>No</td>
-                    </tr>
-                    <tr>
-                        <td>Vision</td>
-                        <td class="winner">Yes</td>
-                        <td>No</td>
-                        <td class="winner">Yes</td>
-                    </tr>
-                    <tr>
-                        <td>Architecture Planning</td>
-                        <td>Very Good</td>
-                        <td>Not designed</td>
-                        <td class="winner">Exceptional</td>
-                    </tr>
-                    <tr>
-                        <td>Security Reviews</td>
-                        <td class="winner">Harshest</td>
-                        <td>Not designed</td>
-                        <td>Excellent</td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
-
-        <!-- SECTION 4: Benchmark Comparison -->
-        <section>
-            <h2>Benchmark Comparison</h2>
-            <div class="benchmark-container">
-                <div class="benchmark-item">
-                    <div class="benchmark-label">
-                        <span>MMLU-Pro</span>
-                        <span>Higher is better</span>
-                    </div>
-                    <div class="bar-container">
-                        <div class="bar-row">
-                            <span class="bar-name">Qwen</span>
-                            <div class="bar-track">
-                                <div class="bar-fill qwen" style="width: 87.8%">87.8</div>
-                            </div>
-                        </div>
-                        <div class="bar-row">
-                            <span class="bar-name">Codex</span>
-                            <div class="bar-track">
-                                <div class="bar-fill codex" style="width: 86%">~86</div>
-                            </div>
-                        </div>
-                        <div class="bar-row">
-                            <span class="bar-name">Opus</span>
-                            <div class="bar-track">
-                                <div class="bar-fill opus" style="width: 85%">~85</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="benchmark-item">
-                    <div class="benchmark-label">
-                        <span>GPQA Diamond</span>
-                        <span>Higher is better</span>
-                    </div>
-                    <div class="bar-container">
-                        <div class="bar-row">
-                            <span class="bar-name">Qwen</span>
-                            <div class="bar-track">
-                                <div class="bar-fill qwen" style="width: 88.4%">88.4</div>
-                            </div>
-                        </div>
-                        <div class="bar-row">
-                            <span class="bar-name">Codex</span>
-                            <div class="bar-track">
-                                <div class="bar-fill codex" style="width: 83%">~83</div>
-                            </div>
-                        </div>
-                        <div class="bar-row">
-                            <span class="bar-name">Opus</span>
-                            <div class="bar-track">
-                                <div class="bar-fill opus" style="width: 86.8%">86.8</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="benchmark-item">
-                    <div class="benchmark-label">
-                        <span>IFBench</span>
-                        <span>Higher is better</span>
-                    </div>
-                    <div class="bar-container">
-                        <div class="bar-row">
-                            <span class="bar-name">Qwen</span>
-                            <div class="bar-track">
-                                <div class="bar-fill qwen" style="width: 76.5%">76.5</div>
-                            </div>
-                        </div>
-                        <div class="bar-row">
-                            <span class="bar-name">Codex</span>
-                            <div class="bar-track">
-                                <div class="bar-fill codex" style="width: 70%">Good</div>
-                            </div>
-                        </div>
-                        <div class="bar-row">
-                            <span class="bar-name">Opus</span>
-                            <div class="bar-track">
-                                <div class="bar-fill opus" style="width: 80%">Very Good</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 5: Where Each Model Wins -->
-        <section>
-            <h2>Where Each Model Wins</h2>
-            <div class="win-grid">
-                <div class="win-card wins">
-                    <h3 style="color: var(--qwen-primary)">🔥 Qwen Wins At</h3>
-                    <ul class="win-list">
-                        <li>Security reviews (harshest critic)</li>
-                        <li>Speed (~2-5s responses)</li>
-                        <li>Cost (cheapest by far)</li>
-                        <li>Context window (1M tokens)</li>
-                        <li>Benchmarks (MMLU-Pro, GPQA)</li>
-                        <li>Instruction following</li>
-                        <li>Multimodal tasks</li>
-                    </ul>
-                </div>
-
-                <div class="win-card not">
-                    <h3 style="color: var(--danger)">🔥 Qwen Doesn't Do</h3>
-                    <ul class="win-list">
-                        <li>Code execution</li>
-                        <li>Agentic loops</li>
-                        <li>Deep creative reasoning</li>
-                        <li>Long-horizon planning</li>
-                        <li>Safety alignment</li>
-                    </ul>
-                </div>
-
-                <div class="win-card wins">
-                    <h3 style="color: var(--codex-primary)">💻 Codex Wins At</h3>
-                    <ul class="win-list">
-                        <li>Writing code (SWE-Bench best)</li>
-                        <li>Sandboxed execution</li>
-                        <li>Bug fixing</li>
-                        <li>File operations</li>
-                        <li>TDD workflows</li>
-                    </ul>
-                </div>
-
-                <div class="win-card wins">
-                    <h3 style="color: var(--opus-primary)">🧠 Opus Wins At</h3>
-                    <ul class="win-list">
-                        <li>Architecture planning</li>
-                        <li>Multi-step reasoning</li>
-                        <li>Nuanced analysis</li>
-                        <li>Creative problem-solving</li>
-                        <li>Safety & alignment</li>
-                        <li>Strategic thinking</li>
-                    </ul>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 6: Real-World Test -->
-        <section>
-            <h2>Real-World Test: Builder Agent Security Review</h2>
-            <table class="security-table">
-                <thead>
-                    <tr>
-                        <th>Security Issue</th>
-                        <th>GPT-4o Auto</th>
-                        <th>GPT-4o Pro</th>
-                        <th>Qwen3.5-Plus</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Trusted host is dangerous</td>
-                        <td><span class="miss">✗ Missed</span></td>
-                        <td><span class="check">✓ Found</span></td>
-                        <td><span class="check">✓ Found</span></td>
-                    </tr>
-                    <tr>
-                        <td>File handoff injection</td>
-                        <td><span class="miss">✗ Missed</span></td>
-                        <td><span class="check">✓ Found</span></td>
-                        <td><span class="check">✓ Found</span></td>
-                    </tr>
-                    <tr>
-                        <td>Agent self-modification risk</td>
-                        <td><span class="miss">✗ Missed</span></td>
-                        <td><span class="miss">✗ Missed</span></td>
-                        <td><span class="check">✓ Only Qwen</span></td>
-                    </tr>
-                    <tr>
-                        <td>sessions_send as exfil channel</td>
-                        <td><span class="miss">✗ Missed</span></td>
-                        <td><span class="miss">✗ Missed</span></td>
-                        <td><span class="check">✓ Only Qwen</span></td>
-                    </tr>
-                    <tr>
-                        <td>Formal job state machine</td>
-                        <td><span class="miss">✗ Missed</span></td>
-                        <td><span class="miss">✗ Missed</span></td>
-                        <td><span class="check">✓ Only Qwen</span></td>
-                    </tr>
-                    <tr>
-                        <td>Exec command allowlist</td>
-                        <td><span class="miss">✗ Missed</span></td>
-                        <td><span class="partial">△ Mentioned</span></td>
-                        <td><span class="check">✓ Full examples</span></td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div class="security-summary">
-                <div class="security-stat">
-                    <div class="value" style="color: var(--danger)">6.5</div>
-                    <div class="label">GPT-4o Auto Score</div>
-                </div>
-                <div class="security-stat">
-                    <div class="value" style="color: var(--warning)">4.5</div>
-                    <div class="label">GPT-4o Pro Score</div>
-                </div>
-                <div class="security-stat">
-                    <div class="value" style="color: var(--success)">4.5</div>
-                    <div class="label">Qwen Score (lower = better)</div>
-                </div>
-                <div class="security-stat">
-                    <div class="value">~30s</div>
-                    <div class="label">Auto Time</div>
-                </div>
-                <div class="security-stat">
-                    <div class="value">~12min</div>
-                    <div class="label">Pro Time</div>
-                </div>
-                <div class="security-stat">
-                    <div class="value">~50s</div>
-                    <div class="label">Qwen Time</div>
-                </div>
-                <div class="security-stat">
-                    <div class="value">Included</div>
-                    <div class="label">Auto Cost</div>
-                </div>
-                <div class="security-stat">
-                    <div class="value">Included</div>
-                    <div class="label">Pro Cost</div>
-                </div>
-                <div class="security-stat">
-                    <div class="value" style="color: var(--qwen-primary)">$0.02</div>
-                    <div class="label">Qwen Cost</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 7: The Optimal Pipeline -->
-        <section>
-            <h2>The Optimal Pipeline</h2>
-            <div class="pipeline-flow">
-                <div class="pipeline-step opus">
-                    <div class="icon">🧠</div>
-                    <div class="name">Opus</div>
-                    <div class="action">Plans & Architecture</div>
-                </div>
-                <svg width="80" height="30" class="pipeline-arrow-svg"><line x1="0" y1="15" x2="70" y2="15" stroke="#888" stroke-width="2" stroke-dasharray="8 4" style="animation: dashFlow 0.8s linear infinite"/><polygon points="70,8 80,15 70,22" fill="#888"/></svg>
-                <div class="pipeline-step qwen">
-                    <div class="icon">🔥</div>
-                    <div class="name">Qwen</div>
-                    <div class="action">Reviews & Security</div>
-                </div>
-                <svg width="80" height="30" class="pipeline-arrow-svg"><line x1="0" y1="15" x2="70" y2="15" stroke="#888" stroke-width="2" stroke-dasharray="8 4" style="animation: dashFlow 0.8s linear infinite"/><polygon points="70,8 80,15 70,22" fill="#888"/></svg>
-                <div class="pipeline-step codex">
-                    <div class="icon">💻</div>
-                    <div class="name">Codex</div>
-                    <div class="action">Builds & Executes</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- FOOTER -->
-        <footer>
-            <p>This page was generated by Qwen3.5-Plus (Alibaba Cloud)</p>
-            <div class="footer-links">
-                <a href="https://mikehelm.github.io/otto-model-comparison/" target="_blank">Opus 4.6 Version</a>
-                <span>·</span>
-                <a href="https://mikehelm.github.io/otto-model-comparison-local/" target="_blank">Local Qwen3 32B Version</a>
-            </div>
-        </footer>
+        </div>
     </div>
+
+    <!-- SECTION 2: API Cost Comparison -->
+    <h2 class="section-title" style="margin-top: 4rem;">API Cost Comparison</h2>
+    <div class="grid grid-3">
+        <div class="card cost-card qwen-theme anim-delay-1">
+            <h3 class="text-qwen">Qwen3.5-Plus</h3>
+            <ul>
+                <li><span>Input (1M)</span> <span class="cost-val">$0.80</span></li>
+                <li><span>Output (1M)</span> <span class="cost-val">$2.00</span></li>
+                <li><span>Context</span> <span class="cost-val">1M tokens</span></li>
+                <li><span>Est. Review</span> <span class="cost-val">~$0.02</span></li>
+            </ul>
+        </div>
+        <div class="card cost-card codex-theme anim-delay-2">
+            <h3 class="text-codex">Codex CLI</h3>
+            <ul>
+                <li><span>Input (1M)</span> <span class="cost-val">$2.50</span></li>
+                <li><span>Output (1M)</span> <span class="cost-val">$10.00</span></li>
+                <li><span>Context</span> <span class="cost-val">200K tokens</span></li>
+                <li><span>Est. Session</span> <span class="cost-val">~$0.05</span></li>
+            </ul>
+        </div>
+        <div class="card cost-card opus-theme anim-delay-3">
+            <h3 class="text-opus">Opus 4.6</h3>
+            <ul>
+                <li><span>Input (1M)</span> <span class="cost-val">$15.00</span></li>
+                <li><span>Output (1M)</span> <span class="cost-val">$75.00</span></li>
+                <li><span>Context</span> <span class="cost-val">200K tokens</span></li>
+                <li><span>Est. Review</span> <span class="cost-val">~$0.30</span></li>
+            </ul>
+        </div>
+    </div>
+    
+    <p class="sub-note anim-delay-4">Subscriptions available: ChatGPT Pro & Claude Max at $200/mo — good fallback for heavy individual use</p>
+
+    <table class="scale-table anim-delay-4">
+        <thead>
+            <tr>
+                <th>Tier</th>
+                <th>Calls/Mo</th>
+                <th>Qwen Cost</th>
+                <th>Codex Cost</th>
+                <th>Opus Cost</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Light</td><td>50</td><td>$1.00</td><td>$2.50</td><td>$15.00</td></tr>
+            <tr><td>Medium</td><td>500</td><td>$10.00</td><td>$25.00</td><td>$150.00</td></tr>
+            <tr><td>Heavy</td><td>2,000</td><td>$40.00</td><td>$100.00</td><td>$600.00</td></tr>
+            <tr><td>Pipeline</td><td>5,000</td><td>$100.00</td><td>$250.00</td><td>$1,500.00</td></tr>
+        </tbody>
+    </table>
+
+    <!-- SECTION 3: Head-to-Head -->
+    <h2 class="section-title" style="margin-top: 4rem;">Head-to-Head</h2>
+    <div class="card anim-delay-1" style="overflow-x: auto;">
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th class="text-qwen">Qwen3.5-Plus</th>
+                    <th class="text-codex">Codex CLI</th>
+                    <th class="text-opus">Opus 4.6</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Cost Input</td>
+                    <td class="winner-cell border-qwen">$0.80/M</td>
+                    <td>$2.50/M</td>
+                    <td>$15.00/M</td>
+                </tr>
+                <tr>
+                    <td>Cost Output</td>
+                    <td class="winner-cell border-qwen">$2.00/M</td>
+                    <td>$10.00/M</td>
+                    <td>$75.00/M</td>
+                </tr>
+                <tr>
+                    <td>Response Speed</td>
+                    <td class="winner-cell border-qwen">~2-5s</td>
+                    <td>Slow (sandboxed)</td>
+                    <td>~5-15s</td>
+                </tr>
+                <tr>
+                    <td>Context Window</td>
+                    <td class="winner-cell border-qwen">1M tokens</td>
+                    <td>200K tokens</td>
+                    <td>200K tokens</td>
+                </tr>
+                <tr>
+                    <td>MMLU-Pro</td>
+                    <td class="winner-cell border-qwen">87.8</td>
+                    <td>~86</td>
+                    <td>~85</td>
+                </tr>
+                <tr>
+                    <td>GPQA Diamond</td>
+                    <td class="winner-cell border-qwen">88.4</td>
+                    <td>~83</td>
+                    <td>86.8</td>
+                </tr>
+                <tr>
+                    <td>IFBench</td>
+                    <td class="winner-cell border-qwen">76.5</td>
+                    <td>Good</td>
+                    <td>Very Good</td>
+                </tr>
+                <tr>
+                    <td>SWE-Bench</td>
+                    <td>Good</td>
+                    <td class="winner-cell border-codex">Best</td>
+                    <td>Very Good</td>
+                </tr>
+                <tr>
+                    <td>Code Execution</td>
+                    <td>No</td>
+                    <td class="winner-cell border-codex">Yes (sandbox)</td>
+                    <td>No</td>
+                </tr>
+                <tr>
+                    <td>Vision</td>
+                    <td class="winner-cell border-qwen">Yes ✓</td>
+                    <td>No</td>
+                    <td class="winner-cell border-opus">Yes ✓</td>
+                </tr>
+                <tr>
+                    <td>Architecture Planning</td>
+                    <td>Very Good</td>
+                    <td>Not designed</td>
+                    <td class="winner-cell border-opus">Exceptional</td>
+                </tr>
+                <tr>
+                    <td>Security Reviews</td>
+                    <td class="winner-cell border-qwen">Harshest</td>
+                    <td>Not designed</td>
+                    <td>Excellent</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- SECTION 4: Benchmark Comparison -->
+    <h2 class="section-title" style="margin-top: 4rem;">Benchmark Comparison</h2>
+    <div class="grid grid-2 anim-delay-2">
+        <div class="benchmark-group">
+            <div class="benchmark-label"><span>MMLU-Pro</span> <span>(Higher is better)</span></div>
+            <div class="bar-container"><div class="bar bg-qwen" style="width: 87.8%"><span>87.8</span></div></div>
+            <div class="bar-container"><div class="bar bg-codex" style="width: 86%"><span>86.0</span></div></div>
+            <div class="bar-container"><div class="bar bg-opus" style="width: 85%"><span>85.0</span></div></div>
+        </div>
+        <div class="benchmark-group">
+            <div class="benchmark-label"><span>GPQA Diamond</span> <span>(Harder Science)</span></div>
+            <div class="bar-container"><div class="bar bg-qwen" style="width: 88.4%"><span>88.4</span></div></div>
+            <div class="bar-container"><div class="bar bg-opus" style="width: 86.8%"><span>86.8</span></div></div>
+            <div class="bar-container"><div class="bar bg-codex" style="width: 83%"><span>83.0</span></div></div>
+        </div>
+        <div class="benchmark-group">
+            <div class="benchmark-label"><span>IFBench</span> <span>(Instruction Following)</span></div>
+            <div class="bar-container"><div class="bar bg-qwen" style="width: 76.5%"><span>76.5</span></div></div>
+            <div class="bar-container"><div class="bar bg-opus" style="width: 74%"><span>~74</span></div></div>
+            <div class="bar-container"><div class="bar bg-codex" style="width: 70%"><span>~70</span></div></div>
+        </div>
+    </div>
+
+    <!-- SECTION 5: Where Each Model Wins -->
+    <h2 class="section-title" style="margin-top: 4rem;">Where Each Model Wins</h2>
+    <div class="grid grid-2">
+        <div class="card strength-card qwen-theme anim-delay-1">
+            <h4 class="text-qwen">Qwen Strengths</h4>
+            <div class="tag-cloud">
+                <span class="tag border-qwen">Security Reviews</span>
+                <span class="tag border-qwen">Speed</span>
+                <span class="tag border-qwen">Cost Efficiency</span>
+                <span class="tag border-qwen">1M Context</span>
+                <span class="tag border-qwen">Benchmarks</span>
+                <span class="tag border-qwen">Instruction Following</span>
+                <span class="tag border-qwen">Multimodal</span>
+            </div>
+        </div>
+        <div class="card strength-card qwen-theme anim-delay-2" style="border-style: dashed;">
+            <h4 class="text-qwen" style="opacity: 0.8">Qwen Limitations</h4>
+            <div class="tag-cloud">
+                <span class="tag" style="border-color: #555">No Code Execution</span>
+                <span class="tag" style="border-color: #555">No Agentic Loops</span>
+                <span class="tag" style="border-color: #555">Less Deep Creative</span>
+                <span class="tag" style="border-color: #555">Limited Long-Horizon</span>
+            </div>
+        </div>
+        <div class="card strength-card codex-theme anim-delay-3">
+            <h4 class="text-codex">Codex Strengths</h4>
+            <div class="tag-cloud">
+                <span class="tag border-codex">Writing Code</span>
+                <span class="tag border-codex">Sandboxed Execution</span>
+                <span class="tag border-codex">Bug Fixing</span>
+                <span class="tag border-codex">File Operations</span>
+                <span class="tag border-codex">TDD</span>
+            </div>
+        </div>
+        <div class="card strength-card opus-theme anim-delay-4">
+            <h4 class="text-opus">Opus Strengths</h4>
+            <div class="tag-cloud">
+                <span class="tag border-opus">Architecture Planning</span>
+                <span class="tag border-opus">Multi-step Reasoning</span>
+                <span class="tag border-opus">Nuanced Analysis</span>
+                <span class="tag border-opus">Creative Problem-Solving</span>
+                <span class="tag border-opus">Safety Alignment</span>
+                <span class="tag border-opus">Strategic Thinking</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 6: Real-World Test -->
+    <h2 class="section-title" style="margin-top: 4rem;">Real-World Test: Builder Agent Security Review</h2>
+    <div class="card anim-delay-1" style="overflow-x: auto;">
+        <table class="test-table">
+            <thead>
+                <tr>
+                    <th style="text-align:left; padding-left:0;">Vulnerability Type</th>
+                    <th>Auto Agent</th>
+                    <th>Opus Pro</th>
+                    <th class="text-qwen">Qwen3.5</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Trusted host is dangerous</td>
+                    <td class="status-missed">Missed</td>
+                    <td class="status-found">Found</td>
+                    <td class="status-found">Found ✓</td>
+                </tr>
+                <tr>
+                    <td>File handoff injection</td>
+                    <td class="status-missed">Missed</td>
+                    <td class="status-found">Found</td>
+                    <td class="status-found">Found ✓</td>
+                </tr>
+                <tr>
+                    <td>Agent self-modification risk</td>
+                    <td class="status-missed">Missed</td>
+                    <td class="status-missed">Missed</td>
+                    <td class="status-found">Found ✓ <small>(unique)</small></td>
+                </tr>
+                <tr>
+                    <td>sessions_send as exfil channel</td>
+                    <td class="status-missed">Missed</td>
+                    <td class="status-missed">Missed</td>
+                    <td class="status-found">Found ✓ <small>(unique)</small></td>
+                </tr>
+                <tr>
+                    <td>Formal job state machine</td>
+                    <td class="status-missed">Missed</td>
+                    <td class="status-missed">Missed</td>
+                    <td class="status-found">Found ✓ <small>(unique)</small></td>
+                </tr>
+                <tr>
+                    <td>Exec command allowlist examples</td>
+                    <td class="status-missed">Missed</td>
+                    <td>Mentioned</td>
+                    <td class="status-found">Full Examples ✓</td>
+                </tr>
+                <tr class="summary-row">
+                    <td>Security Score (Lower = Harsher)</td>
+                    <td>6.5</td>
+                    <td>5.5</td>
+                    <td class="text-qwen">4.5 👑</td>
+                </tr>
+                <tr class="summary-row">
+                    <td>Time Taken</td>
+                    <td>~30s</td>
+                    <td>~12min</td>
+                    <td class="text-qwen">~50s</td>
+                </tr>
+                <tr class="summary-row">
+                    <td>Cost</td>
+                    <td>Sub</td>
+                    <td>Sub</td>
+                    <td class="text-qwen">$0.02</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- SECTION 7: The Optimal Pipeline -->
+    <h2 class="section-title" style="margin-top: 4rem;">The Optimal Pipeline</h2>
+    <div class="pipeline-flow anim-delay-2">
+        <div class="flow-node bg-opus" style="color: #fff;">
+            <span>🧠</span>
+            <p>Opus Plans</p>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-node bg-qwen" style="color: #000;">
+            <span>🔥</span>
+            <p>Qwen Reviews</p>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-node bg-codex" style="color: #fff;">
+            <span>💻</span>
+            <p>Codex Builds</p>
+        </div>
+    </div>
+
+</div>
+
+<footer>
+    <p>Generated by Qwen3 32B (Local Ollama on RTX 5090)</p>
+    <div style="margin: 1rem 0; display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
+        <a href="https://mikehelm.github.io/otto-model-comparison/" target="_blank">Opus 4.6 Version</a>
+        <a href="https://mikehelm.github.io/otto-model-comparison-qwen35/" target="_blank">Qwen3.5-Plus API Version</a>
+    </div>
+    <p style="font-size: 0.8rem; opacity: 0.6;">Part of the Otto Pipeline Intelligence project</p>
+</footer>
+
 </body>
 </html>
